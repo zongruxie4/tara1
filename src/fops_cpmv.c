@@ -219,7 +219,6 @@ void
 fops_replace_entry(ops_t *ops, view_t *src, const dir_entry_t *src_entry,
 		view_t *dst, dir_entry_t *dst_entry)
 {
-	void *cp = (void *)(size_t)1;
 	int dst_exists = !fentry_is_fake(dst_entry);
 
 	char dst_dir[PATH_MAX + 1];
@@ -254,10 +253,11 @@ fops_replace_entry(ops_t *ops, view_t *src, const dir_entry_t *src_entry,
 
 	fops_progress_msg("Copying files", 0, 1);
 
+	void *flags = ops_flags(DF_MAKE_PARENTS);
 	if(fops_active(ops) && !is_valid_dir(dst_dir) &&
-			perform_operation(OP_MKDIR, ops, cp, dst_dir, NULL) == OPS_SUCCEEDED)
+			perform_operation(OP_MKDIR, ops, flags, dst_dir, NULL) == OPS_SUCCEEDED)
 	{
-		un_group_add_op(OP_MKDIR, cp, NULL, dst_dir, "");
+		un_group_add_op(OP_MKDIR, flags, NULL, dst_dir, "");
 	}
 
 	if(fops_active(ops))

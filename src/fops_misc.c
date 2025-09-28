@@ -987,15 +987,12 @@ fops_mkdirs(view_t *view, int at, char **names, int count, int create_parent)
 	char buf[COMMAND_GROUP_INFO_LEN + 1];
 	int i;
 	int n;
-	void *cp;
 	const char *const dst_dir = fops_get_dst_dir(view, at);
 
 	if(!fops_view_can_be_extended(view, at))
 	{
 		return 1;
 	}
-
-	cp = (void *)(size_t)create_parent;
 
 	for(i = 0; i < count; ++i)
 	{
@@ -1021,6 +1018,7 @@ fops_mkdirs(view_t *view, int at, char **names, int count, int create_parent)
 	}
 
 	ops_t *ops = fops_get_ops(OP_MKDIR, "making dirs", dst_dir, dst_dir);
+	void *flags = ops_flags(create_parent ? DF_MAKE_PARENTS : DF_NONE);
 
 	snprintf(buf, sizeof(buf), "mkdir in %s: ", replace_home_part(dst_dir));
 
@@ -1032,9 +1030,9 @@ fops_mkdirs(view_t *view, int at, char **names, int count, int create_parent)
 		char full[PATH_MAX + 1];
 		to_canonic_path(names[i], dst_dir, full, sizeof(full));
 
-		if(perform_operation(OP_MKDIR, ops, cp, full, NULL) == OPS_SUCCEEDED)
+		if(perform_operation(OP_MKDIR, ops, flags, full, NULL) == OPS_SUCCEEDED)
 		{
-			un_group_add_op(OP_MKDIR, cp, NULL, full, "");
+			un_group_add_op(OP_MKDIR, flags, NULL, full, "");
 			++n;
 		}
 		else if(i == 0)

@@ -126,6 +126,7 @@ static OpsResult op_symlink(ops_t *ops, void *data, const char src[],
 		const char dst[]);
 static OpsResult op_mkdir(ops_t *ops, void *data, const char src[],
 		const char dst[]);
+static DataFlags data_flags(void *data);
 static OpsResult op_rmdir(ops_t *ops, void *data, const char src[],
 		const char dst[]);
 static OpsResult op_mkfile(ops_t *ops, void *data, const char src[],
@@ -293,6 +294,16 @@ ops_free(ops_t *ops)
 	free(ops->base_dir);
 	free(ops->target_dir);
 	free(ops);
+}
+
+void *
+ops_flags(DataFlags flags)
+{
+	if(flags == DF_NONE)
+	{
+		return NULL;
+	}
+	return (void *)(uintptr_t)flags;
 }
 
 OpsResult
@@ -907,6 +918,8 @@ op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int make_parents = ((data_flags(data) & DF_MAKE_PARENTS) != 0);
+
 	if(!ops_uses_syscalls(ops))
 	{
 #ifndef _WIN32
@@ -914,13 +927,13 @@ op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 		char *escaped;
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
-		snprintf(cmd, sizeof(cmd), "mkdir %s %s", (data == NULL) ? "" : "-p",
+		snprintf(cmd, sizeof(cmd), "mkdir %s %s", make_parents ? "-p" : "",
 				escaped);
 		free(escaped);
 		LOG_INFO_MSG("Running mkdir command: \"%s\"", cmd);
 		return run_operation_command(ops, cmd, 1);
 #else
-		if(data == NULL)
+		if(!make_parents)
 		{
 			wchar_t *const utf16_path = utf8_to_utf16(src);
 			BOOL success = CreateDirectoryW(utf16_path, NULL);
@@ -955,10 +968,18 @@ op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 
 	io_args_t args = {
 		.arg1.path = src,
-		.arg2.process_parents = data != NULL,
+		.arg2.process_parents = make_parents,
 		.arg3.mode = 0755,
 	};
 	return exec_io_op(ops, &iop_mkdir, &args, 0);
+}
+
+/* Turns a pointer-to-void into data flags or asserts.  Returns the flags. */
+static DataFlags
+data_flags(void *data)
+{
+	assert((uintptr_t)data < DF_LIMIT_VALUE && "Got pointer instead of flags.");
+	return (DataFlags)(uintptr_t)data;
 }
 
 static OpsResult

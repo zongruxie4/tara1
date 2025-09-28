@@ -851,7 +851,8 @@ merge_dirs(const char src[], const char dst[], ops_t *ops)
 	/* Make sure target directory exists.  Ignore error as we don't care whether
 	 * it existed before we try to create it and following operations will fail
 	 * if we can't create this directory for some reason. */
-	(void)perform_operation(OP_MKDIR, NULL, (void *)(size_t)1, dst, NULL);
+	(void)perform_operation(OP_MKDIR, NULL, ops_flags(DF_MAKE_PARENTS), dst,
+			NULL);
 
 	int skipped = 0;
 	OpsResult result = OPS_SUCCEEDED;

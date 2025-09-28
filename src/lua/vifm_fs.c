@@ -95,14 +95,10 @@ VLUA_API(fs_mkdir)(lua_State *lua)
 	const char *path = luaL_checkstring(lua, 1);
 	const char *on_missing_parent = luaL_optstring(lua, 2, "fail");
 
-	void *data = no_data;
-	if(strcmp(on_missing_parent, "create") == 0)
-	{
-		/* Any non-NULL value enables creation of parent directories. */
-		data = lua;
-	}
-
-	return perform_fs_op(lua, OP_MKDIR, path, no_dst, CRP_SKIP_ALL, data);
+	DataFlags flags = strcmp(on_missing_parent, "create") == 0 ? DF_MAKE_PARENTS
+	                                                           : DF_NONE;
+	return perform_fs_op(lua, OP_MKDIR, path, no_dst, CRP_SKIP_ALL,
+			ops_flags(flags));
 }
 
 /* Member of `vifm.fs` that creates a file if it doesn't yet exist. */

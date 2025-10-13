@@ -881,7 +881,7 @@ merge_dirs(const char src[], const char dst[], ops_t *ops)
 					dst_path);
 			if(result == OPS_SUCCEEDED)
 			{
-				un_group_add_op(OP_MOVEF, put_confirm.ops, NULL, src_path, dst_path);
+				un_group_add_op(OP_MOVEF, NULL, NULL, src_path, dst_path);
 			}
 		}
 

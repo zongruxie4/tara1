@@ -842,6 +842,8 @@ op_subattr(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int cancellable = (data == NULL);
+
 	if(!ops_uses_syscalls(ops))
 	{
 		char cmd[6 + PATH_MAX*2 + 1];
@@ -878,7 +880,7 @@ op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		snprintf(cmd, sizeof(cmd), "ln -s %s %s", escaped_src, escaped_dst);
 		LOG_INFO_MSG("Running ln command: \"%s\"", cmd);
-		result = run_operation_command(ops, cmd, 1);
+		result = run_operation_command(ops, cmd, cancellable);
 #else
 		char exe_dir[PATH_MAX + 2];
 		if(get_exe_dir(exe_dir, ARRAY_LEN(exe_dir)) != 0)
@@ -912,7 +914,7 @@ op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 		.arg2.target = dst,
 		.arg3.crs = IO_CRS_REPLACE_FILES,
 	};
-	return exec_io_op(ops, &iop_ln, &args, 0);
+	return exec_io_op(ops, &iop_ln, &args, cancellable);
 }
 
 static OpsResult

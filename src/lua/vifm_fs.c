@@ -84,7 +84,7 @@ VLUA_API(fs_ln)(lua_State *lua)
 {
 	const char *path = luaL_checkstring(lua, 1);
 	const char *target = luaL_checkstring(lua, 2);
-	return perform_fs_op(lua, OP_SYMLINK, target, path, CRP_SKIP_ALL, no_data);
+	return perform_fs_op(lua, OP_SYMLINK, target, path, CRP_SKIP_ALL, no_cancel);
 }
 
 /* Member of `vifm.fs` that creates a directory, possibly along with its

@@ -513,6 +513,7 @@ static OpsResult
 op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		ConflictAction conflict_action)
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
 	const int fast_file_cloning = (ops == NULL)
 	                             ? cfg.fast_file_cloning
 	                             : ops->fast_file_cloning;
@@ -523,7 +524,6 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 #ifndef _WIN32
 		char *escaped_src, *escaped_dst;
 		char cmd[6 + PATH_MAX*2 + 1];
-		const int cancellable = (data == NULL);
 
 		escaped_src = shell_arg_escape(src, ops_shell_type(ops));
 		escaped_dst = shell_arg_escape(dst, ops_shell_type(ops));
@@ -598,7 +598,7 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 			.data_sync = data_sync,
 		},
 	};
-	return exec_io_op(ops, &ior_cp, &args, data == NULL);
+	return exec_io_op(ops, &ior_cp, &args, cancellable);
 }
 
 /* OP_MOVE operation handler.  Moves file/directory without overwriting
@@ -631,6 +631,8 @@ static OpsResult
 op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 		ConflictAction conflict_action)
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+
 	OpsResult result;
 
 	if(!ops_uses_syscalls(ops))
@@ -639,7 +641,6 @@ op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 		struct stat st;
 		char *escaped_src, *escaped_dst;
 		char cmd[6 + PATH_MAX*2 + 1];
-		const int cancellable = data == NULL;
 
 		if(conflict_action == CA_FAIL && os_lstat(dst, &st) == 0 &&
 				!is_case_change(src, dst))
@@ -698,7 +699,7 @@ op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 			},
 		};
 
-		result = exec_io_op(ops, &ior_mv, &args, data == NULL);
+		result = exec_io_op(ops, &ior_mv, &args, cancellable);
 	}
 
 	/* Accounting for background jobs might take some kind of a queue of events
@@ -842,7 +843,7 @@ op_subattr(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 {
-	const int cancellable = (data == NULL);
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
 
 	if(!ops_uses_syscalls(ops))
 	{

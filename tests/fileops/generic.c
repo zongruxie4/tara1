@@ -190,14 +190,14 @@ perform_merge(int op)
 		if(!cfg.use_system_calls)
 		{
 			/* cp/mv require first argument to be inside of directory being merged. */
-			assert_int_equal(OPS_SUCCEEDED, perform_operation(op, ops, NULL,
-						"first/nested1", "second/"));
+			assert_int_equal(OPS_SUCCEEDED, perform_operation(op, ops,
+						ops_flags(DF_NONE), "first/nested1", "second/"));
 		}
 		else
 #endif
 		{
-			assert_int_equal(OPS_SUCCEEDED, perform_operation(op, ops, NULL, "first",
-						"second"));
+			assert_int_equal(OPS_SUCCEEDED, perform_operation(op, ops,
+						ops_flags(DF_NONE), "first", "second"));
 		}
 	}
 	ops_free(ops);

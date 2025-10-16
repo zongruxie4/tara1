@@ -1294,8 +1294,8 @@ fops_mv_file_f(const char src[], const char dst[], OPS op, int bg,
 		return 0;
 	}
 
-	OpsResult result = perform_operation(op, ops, cancellable ? NULL : (void *)1,
-			src, dst);
+	void *flags = ops_flags(cancellable ? DF_NONE : DF_NO_CANCEL);
+	OpsResult result = perform_operation(op, ops, flags, src, dst);
 	if(result != OPS_SUCCEEDED)
 	{
 		return 1;

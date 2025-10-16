@@ -84,6 +84,7 @@ VLUA_API(fs_ln)(lua_State *lua)
 {
 	const char *path = luaL_checkstring(lua, 1);
 	const char *target = luaL_checkstring(lua, 2);
+	void *no_cancel = ops_flags(DF_NO_CANCEL);
 	return perform_fs_op(lua, OP_SYMLINK, target, path, CRP_SKIP_ALL, no_cancel);
 }
 
@@ -140,6 +141,7 @@ cp_mv(lua_State *lua, OPS normal_op, OPS force_op, OPS append_op)
 	const char *src = luaL_checkstring(lua, 1);
 	const char *dst = luaL_checkstring(lua, 2);
 	const char *on_conflict = luaL_optstring(lua, 3, "fail");
+	void *no_cancel = ops_flags(DF_NO_CANCEL);
 
 	if(strcmp(on_conflict, "overwrite") == 0)
 	{

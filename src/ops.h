@@ -61,7 +61,8 @@ typedef enum
 {
 	DF_NONE         =      0, /* No flags. */
 	DF_MAKE_PARENTS = 1 << 0, /* Parent directories should be created. */
-	DF_LIMIT_VALUE  = 1 << 1, /* Indirect size of the flags. */
+	DF_NO_CANCEL    = 1 << 1, /* Cancellation is not enabled for the operation. */
+	DF_LIMIT_VALUE  = 1 << 2, /* Indirect size of the flags. */
 }
 DataFlags;
 

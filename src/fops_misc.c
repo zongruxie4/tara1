@@ -262,7 +262,8 @@ delete_file(dir_entry_t *entry, ops_t *ops, int reg, int use_trash, int nested)
 		char *const dest = trash_gen_path(entry->origin, entry->name);
 		if(dest != NULL)
 		{
-			OpsResult r = perform_operation(op, ops, NULL, full_path, dest);
+			OpsResult r =
+				perform_operation(op, ops, ops_flags(DF_NONE), full_path, dest);
 			result = (r == OPS_SUCCEEDED ? 0 : -1);
 
 			/* For some reason "rm" sometimes returns 0 on cancellation. */
@@ -443,7 +444,7 @@ delete_file_in_bg(ops_t *ops, const char path[], int use_trash)
 		const char *const fname = get_last_path_component(path);
 		char *const trash_name = trash_gen_path(path, fname);
 		const char *const dest = (trash_name != NULL) ? trash_name : fname;
-		(void)perform_operation(OP_MOVE, ops, NULL, path, dest);
+		(void)perform_operation(OP_MOVE, ops, ops_flags(DF_NONE), path, dest);
 		free(trash_name);
 	}
 }
@@ -738,7 +739,8 @@ change_link(ops_t *ops, const char path[], const char from[], const char to[])
 		un_group_add_op(OP_REMOVESL, NULL, NULL, path, from);
 	}
 
-	if(perform_operation(OP_SYMLINK2, ops, NULL, to, path) == OPS_SUCCEEDED)
+	void *flags = ops_flags(DF_NONE);
+	if(perform_operation(OP_SYMLINK2, ops, flags, to, path) == OPS_SUCCEEDED)
 	{
 		un_group_add_op(OP_SYMLINK2, NULL, NULL, to, path);
 	}
@@ -971,7 +973,8 @@ clone_file(const dir_entry_t *entry, const char path[], const char clone[],
 
 	get_full_path_of(entry, sizeof(full_path), full_path);
 
-	if(perform_operation(OP_COPY, ops, NULL, full_path, clone_name) !=
+	void *flags = ops_flags(DF_NONE);
+	if(perform_operation(OP_COPY, ops, flags, full_path, clone_name) !=
 			OPS_SUCCEEDED)
 	{
 		return 1;

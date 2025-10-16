@@ -717,8 +717,8 @@ cp_file_f(const char src[], const char dst[], CopyMoveLikeOp op, int bg,
 		}
 	}
 
-	OpsResult result = perform_operation(file_op, ops,
-			cancellable ? NULL : (void *)1, src, dst);
+	void *flags = ops_flags(cancellable ? DF_NONE : DF_NO_CANCEL);
+	OpsResult result = perform_operation(file_op, ops, flags, src, dst);
 	if(result != OPS_SUCCEEDED)
 	{
 		return 1;

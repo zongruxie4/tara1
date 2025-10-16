@@ -266,7 +266,7 @@ put_files_in_bg(bg_op_t *bg_op, void *arg)
 		}
 
 		bg_op_set_descr(bg_op, src);
-		(void)perform_operation(ops->main_op, ops, NULL, src, dst);
+		(void)perform_operation(ops->main_op, ops, ops_flags(DF_NONE), src, dst);
 	}
 
 	fops_free_bg_args(args);
@@ -558,7 +558,6 @@ put_next(int force)
 	struct stat src_st;
 	char src_buf[PATH_MAX + 1], dst_buf[PATH_MAX + 1];
 	int from_trash;
-	int op;
 	int move;
 	int success;
 	int merge;
@@ -674,6 +673,7 @@ put_next(int force)
 		}
 	}
 
+	int op;
 	if(put_confirm.op == CMLO_LINK_REL || put_confirm.op == CMLO_LINK_ABS)
 	{
 		op = OP_SYMLINK;
@@ -737,8 +737,8 @@ put_next(int force)
 			op = OP_MOVE;
 		}
 
-		success = (perform_operation(op, put_confirm.ops, NULL, src_buf,
-					unique_dst) == OPS_SUCCEEDED);
+		success = (perform_operation(op, put_confirm.ops, ops_flags(DF_NONE),
+					src_buf, unique_dst) == OPS_SUCCEEDED);
 		if(success)
 		{
 			success = (perform_operation(OP_REMOVESL, put_confirm.ops, NULL, dst_buf,
@@ -746,14 +746,14 @@ put_next(int force)
 		}
 		if(success)
 		{
-			success = (perform_operation(OP_MOVE, put_confirm.ops, NULL, unique_dst,
-						dst_buf) == OPS_SUCCEEDED);
+			success = (perform_operation(OP_MOVE, put_confirm.ops, ops_flags(DF_NONE),
+						unique_dst, dst_buf) == OPS_SUCCEEDED);
 		}
 	}
 	else
 	{
-		success = (perform_operation(op, put_confirm.ops, NULL, src_buf,
-					dst_buf) == OPS_SUCCEEDED);
+		success = (perform_operation(op, put_confirm.ops, ops_flags(DF_NONE),
+					src_buf, dst_buf) == OPS_SUCCEEDED);
 	}
 
 	ops_advance(put_confirm.ops, success);
@@ -877,8 +877,8 @@ merge_dirs(const char src[], const char dst[], ops_t *ops)
 		}
 		else
 		{
-			result = perform_operation(OP_MOVEF, put_confirm.ops, NULL, src_path,
-					dst_path);
+			result = perform_operation(OP_MOVEF, put_confirm.ops, ops_flags(DF_NONE),
+					src_path, dst_path);
 			if(result == OPS_SUCCEEDED)
 			{
 				un_group_add_op(OP_MOVEF, NULL, NULL, src_path, dst_path);

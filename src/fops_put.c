@@ -630,7 +630,8 @@ put_next(int force)
 					}
 				}
 
-				if(!clashing_op && perform_operation(OP_REMOVESL, put_confirm.ops, NULL,
+				if(!clashing_op &&
+						perform_operation(OP_REMOVESL, put_confirm.ops, ops_flags(DF_NONE),
 							dst_buf, NULL) != OPS_SUCCEEDED)
 				{
 					show_error_msgf("Can't replace a file",
@@ -737,17 +738,19 @@ put_next(int force)
 			op = OP_MOVE;
 		}
 
-		success = (perform_operation(op, put_confirm.ops, ops_flags(DF_NONE),
-					src_buf, unique_dst) == OPS_SUCCEEDED);
+		void *flags = ops_flags(DF_NONE);
+
+		success = (perform_operation(op, put_confirm.ops, flags, src_buf,
+					unique_dst) == OPS_SUCCEEDED);
 		if(success)
 		{
-			success = (perform_operation(OP_REMOVESL, put_confirm.ops, NULL, dst_buf,
+			success = (perform_operation(OP_REMOVESL, put_confirm.ops, flags, dst_buf,
 						NULL) == OPS_SUCCEEDED);
 		}
 		if(success)
 		{
-			success = (perform_operation(OP_MOVE, put_confirm.ops, ops_flags(DF_NONE),
-						unique_dst, dst_buf) == OPS_SUCCEEDED);
+			success = (perform_operation(OP_MOVE, put_confirm.ops, flags, unique_dst,
+						dst_buf) == OPS_SUCCEEDED);
 		}
 	}
 	else

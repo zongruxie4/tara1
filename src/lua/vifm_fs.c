@@ -47,11 +47,9 @@ VLUA_DECLARE_SAFE(fs_mv);
 VLUA_DECLARE_SAFE(fs_rm);
 VLUA_DECLARE_SAFE(fs_rmdir);
 
-/* Named NULL and non-NULL constants for clarity. */
+/* Named NULL constants for clarity. */
 static void *const no_dst = NULL;
 static void *const no_data = NULL;
-static char dummy;
-static void *const no_cancel = &dummy;
 
 /* Functions of the `vifm.fs` table. */
 static const luaL_Reg vifm_fs_methods[] = {
@@ -122,6 +120,7 @@ static int
 VLUA_API(fs_rm)(lua_State *lua)
 {
 	const char *path = luaL_checkstring(lua, 1);
+	void *no_cancel = ops_flags(DF_NO_CANCEL);
 	return perform_fs_op(lua, OP_REMOVESL, path, no_dst, CRP_SKIP_ALL, no_cancel);
 }
 

@@ -157,7 +157,8 @@ fops_cpmv(view_t *view, char *list[], int nlines, CopyMoveLikeOp op, int flags)
 			}
 			else if(force && !from_trash)
 			{
-				(void)perform_operation(OP_REMOVESL, NULL, NULL, dst_full, NULL);
+				void *flags = ops_flags(DF_NONE);
+				(void)perform_operation(OP_REMOVESL, NULL, flags, dst_full, NULL);
 			}
 		}
 
@@ -670,7 +671,8 @@ cpmv_file_in_bg(ops_t *ops, const char src[], const char dst[], int move,
 
 		if(force && !from_trash)
 		{
-			(void)perform_operation(OP_REMOVESL, NULL, (void *)1, dst_full, NULL);
+			void *flags = ops_flags(DF_NO_CANCEL);
+			(void)perform_operation(OP_REMOVESL, NULL, flags, dst_full, NULL);
 		}
 	}
 

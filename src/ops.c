@@ -365,6 +365,8 @@ op_remove(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+
 	const char *const delete_prg = (ops == NULL)
 	                             ? cfg.delete_prg
 	                             : ops->delete_prg;
@@ -373,7 +375,6 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		char *escaped;
 		char cmd[2*PATH_MAX + 1];
-		const int cancellable = (data == NULL);
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
 		if(escaped == NULL)
@@ -406,7 +407,6 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		char *escaped;
 		char cmd[16 + PATH_MAX];
-		const int cancellable = data == NULL;
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
 		if(escaped == NULL)
@@ -480,7 +480,7 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 	io_args_t args = {
 		.arg1.path = src,
 	};
-	return exec_io_op(ops, &ior_rm, &args, data == NULL);
+	return exec_io_op(ops, &ior_rm, &args, cancellable);
 }
 
 /* OP_COPY operation handler.  Copies file/directory without overwriting

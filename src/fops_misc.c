@@ -230,7 +230,8 @@ delete_file(dir_entry_t *entry, ops_t *ops, int reg, int use_trash, int nested)
 
 	if(!use_trash)
 	{
-		OpsResult r = perform_operation(OP_REMOVE, ops, NULL, full_path, NULL);
+		void *flags = ops_flags(DF_NONE);
+		OpsResult r = perform_operation(OP_REMOVE, ops, flags, full_path, NULL);
 		result = (r == OPS_SUCCEEDED ? 0 : -1);
 
 		/* For some reason "rm" sometimes returns 0 on cancellation. */
@@ -429,9 +430,11 @@ delete_files_in_bg(bg_op_t *bg_op, void *arg)
 static void
 delete_file_in_bg(ops_t *ops, const char path[], int use_trash)
 {
+	void *flags = ops_flags(DF_NONE);
+
 	if(!use_trash)
 	{
-		(void)perform_operation(OP_REMOVE, ops, NULL, path, NULL);
+		(void)perform_operation(OP_REMOVE, ops, flags, path, NULL);
 		return;
 	}
 
@@ -444,7 +447,7 @@ delete_file_in_bg(ops_t *ops, const char path[], int use_trash)
 		const char *const fname = get_last_path_component(path);
 		char *const trash_name = trash_gen_path(path, fname);
 		const char *const dest = (trash_name != NULL) ? trash_name : fname;
-		(void)perform_operation(OP_MOVE, ops, ops_flags(DF_NONE), path, dest);
+		(void)perform_operation(OP_MOVE, ops, flags, path, dest);
 		free(trash_name);
 	}
 }
@@ -734,12 +737,13 @@ verify_retarget_list(char *files[], int nfiles, char *names[], int nnames,
 static void
 change_link(ops_t *ops, const char path[], const char from[], const char to[])
 {
-	if(perform_operation(OP_REMOVESL, ops, NULL, path, NULL) == OPS_SUCCEEDED)
+	void *flags = ops_flags(DF_NONE);
+
+	if(perform_operation(OP_REMOVESL, ops, flags, path, NULL) == OPS_SUCCEEDED)
 	{
 		un_group_add_op(OP_REMOVESL, NULL, NULL, path, from);
 	}
 
-	void *flags = ops_flags(DF_NONE);
 	if(perform_operation(OP_SYMLINK2, ops, flags, to, path) == OPS_SUCCEEDED)
 	{
 		un_group_add_op(OP_SYMLINK2, NULL, NULL, to, path);
@@ -960,11 +964,12 @@ clone_file(const dir_entry_t *entry, const char path[], const char clone[],
 {
 	char full_path[PATH_MAX + 1];
 	char clone_name[PATH_MAX + 1];
+	void *flags = ops_flags(DF_NONE);
 
 	to_canonic_path(clone, path, clone_name, sizeof(clone_name));
 	if(path_exists(clone_name, DEREF))
 	{
-		if(perform_operation(OP_REMOVESL, NULL, NULL, clone_name, NULL) !=
+		if(perform_operation(OP_REMOVESL, NULL, flags, clone_name, NULL) !=
 				OPS_SUCCEEDED)
 		{
 			return 1;
@@ -973,7 +978,6 @@ clone_file(const dir_entry_t *entry, const char path[], const char clone[],
 
 	get_full_path_of(entry, sizeof(full_path), full_path);
 
-	void *flags = ops_flags(DF_NONE);
 	if(perform_operation(OP_COPY, ops, flags, full_path, clone_name) !=
 			OPS_SUCCEEDED)
 	{

@@ -700,6 +700,8 @@ put_next(int force)
 	fops_progress_msg("Putting files", put_confirm.index,
 			put_confirm.reg->nfiles);
 
+	void *flags = ops_flags(DF_NONE);
+
 	/* Merging directory on move requires special handling as it can't be done by
 	 * `mv` and it's better to use the same code regardless of the state of
 	 * 'syscalls'. */
@@ -738,8 +740,6 @@ put_next(int force)
 			op = OP_MOVE;
 		}
 
-		void *flags = ops_flags(DF_NONE);
-
 		success = (perform_operation(op, put_confirm.ops, flags, src_buf,
 					unique_dst) == OPS_SUCCEEDED);
 		if(success)
@@ -755,7 +755,7 @@ put_next(int force)
 	}
 	else
 	{
-		success = (perform_operation(op, put_confirm.ops, ops_flags(DF_NONE),
+		success = (perform_operation(op, put_confirm.ops, flags,
 					src_buf, dst_buf) == OPS_SUCCEEDED);
 	}
 
@@ -789,7 +789,7 @@ put_next(int force)
 
 		if(!(move && merge))
 		{
-			un_group_add_op(op, NULL, NULL, src_buf, dst_buf);
+			un_group_add_op(op, flags, flags, src_buf, dst_buf);
 		}
 
 		un_group_close();
@@ -880,11 +880,12 @@ merge_dirs(const char src[], const char dst[], ops_t *ops)
 		}
 		else
 		{
-			result = perform_operation(OP_MOVEF, put_confirm.ops, ops_flags(DF_NONE),
-					src_path, dst_path);
+			void *flags = ops_flags(DF_NONE);
+			result = perform_operation(OP_MOVEF, put_confirm.ops, flags, src_path,
+					dst_path);
 			if(result == OPS_SUCCEEDED)
 			{
-				un_group_add_op(OP_MOVEF, NULL, NULL, src_path, dst_path);
+				un_group_add_op(OP_MOVEF, flags, flags, src_path, dst_path);
 			}
 		}
 
@@ -906,7 +907,7 @@ merge_dirs(const char src[], const char dst[], ops_t *ops)
 		result = perform_operation(OP_RMDIR, put_confirm.ops, NULL, src, NULL);
 		if(result == OPS_SUCCEEDED)
 		{
-			un_group_add_op(OP_RMDIR, NULL, NULL, src, "");
+			un_group_add_op(OP_RMDIR, NULL, ops_flags(DF_NONE), src, "");
 		}
 	}
 

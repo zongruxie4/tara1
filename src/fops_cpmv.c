@@ -728,7 +728,7 @@ cp_file_f(const char src[], const char dst[], CopyMoveLikeOp op, int bg,
 
 	if(!bg)
 	{
-		un_group_add_op(file_op, NULL, NULL, src, dst);
+		un_group_add_op(file_op, flags, flags, src, dst);
 	}
 	return 0;
 }

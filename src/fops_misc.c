@@ -242,7 +242,7 @@ delete_file(dir_entry_t *entry, ops_t *ops, int reg, int use_trash, int nested)
 
 		if(result == 0)
 		{
-			un_group_add_op(OP_REMOVE, NULL, NULL, full_path, "");
+			un_group_add_op(OP_REMOVE, flags, NULL, full_path, "");
 		}
 	}
 	else if(trash_is_at_path(full_path))
@@ -263,8 +263,8 @@ delete_file(dir_entry_t *entry, ops_t *ops, int reg, int use_trash, int nested)
 		char *const dest = trash_gen_path(entry->origin, entry->name);
 		if(dest != NULL)
 		{
-			OpsResult r =
-				perform_operation(op, ops, ops_flags(DF_NONE), full_path, dest);
+			void *flags = ops_flags(DF_NONE);
+			OpsResult r = perform_operation(op, ops, flags, full_path, dest);
 			result = (r == OPS_SUCCEEDED ? 0 : -1);
 
 			/* For some reason "rm" sometimes returns 0 on cancellation. */
@@ -275,7 +275,7 @@ delete_file(dir_entry_t *entry, ops_t *ops, int reg, int use_trash, int nested)
 
 			if(result == 0)
 			{
-				un_group_add_op(op, NULL, NULL, full_path, dest);
+				un_group_add_op(op, flags, flags, full_path, dest);
 				regs_append(reg, dest);
 			}
 			free(dest);
@@ -741,12 +741,12 @@ change_link(ops_t *ops, const char path[], const char from[], const char to[])
 
 	if(perform_operation(OP_REMOVESL, ops, flags, path, NULL) == OPS_SUCCEEDED)
 	{
-		un_group_add_op(OP_REMOVESL, NULL, NULL, path, from);
+		un_group_add_op(OP_REMOVESL, flags, flags, path, from);
 	}
 
 	if(perform_operation(OP_SYMLINK2, ops, flags, to, path) == OPS_SUCCEEDED)
 	{
-		un_group_add_op(OP_SYMLINK2, NULL, NULL, to, path);
+		un_group_add_op(OP_SYMLINK2, flags, flags, to, path);
 	}
 }
 
@@ -984,7 +984,7 @@ clone_file(const dir_entry_t *entry, const char path[], const char clone[],
 		return 1;
 	}
 
-	un_group_add_op(OP_COPY, NULL, NULL, full_path, clone_name);
+	un_group_add_op(OP_COPY, flags, flags, full_path, clone_name);
 	return 0;
 }
 

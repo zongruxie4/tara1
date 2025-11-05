@@ -1303,7 +1303,7 @@ fops_mv_file_f(const char src[], const char dst[], OPS op, int bg,
 
 	if(!bg)
 	{
-		un_group_add_op(op, NULL, NULL, src, dst);
+		un_group_add_op(op, flags, flags, src, dst);
 	}
 	return 0;
 }

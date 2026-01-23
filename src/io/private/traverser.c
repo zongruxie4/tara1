@@ -88,12 +88,8 @@ traverse_subtree(const char path[], subtree_visitor visitor, void *param)
 		}
 
 		full_path = join_paths(path, d->d_name);
-		if(entry_is_link(full_path, d))
-		{
-			/* Treat symbolic links to directories as files as well. */
-			result = visitor(full_path, VA_FILE, param);
-		}
-		else if(entry_is_dir(full_path, d))
+		/* Treat symbolic links to directories as files as well. */
+		if(entry_is_dir(full_path, d))
 		{
 			result = traverse_subtree(full_path, visitor, param);
 		}

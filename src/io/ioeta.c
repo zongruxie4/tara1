@@ -55,7 +55,7 @@ ioeta_free(ioeta_estim_t *estim)
 }
 
 void
-ioeta_calculate(ioeta_estim_t *estim, const char path[], int shallow)
+ioeta_calculate(ioeta_estim_t *estim, const char path[], int shallow, int deep)
 {
 	if(shallow)
 	{
@@ -63,7 +63,7 @@ ioeta_calculate(ioeta_estim_t *estim, const char path[], int shallow)
 	}
 	else
 	{
-		(void)traverse(path, /*deep=*/0, &eta_visitor, estim);
+		(void)traverse(path, deep, &eta_visitor, estim);
 	}
 }
 
@@ -85,7 +85,7 @@ eta_visitor(const char full_path[], VisitAction action, int deep, void *param)
 			ioeta_add_dir(estim, full_path);
 			return VR_SKIP_DIR_LEAVE;
 		case VA_FILE:
-			ioeta_add_file(estim, full_path);
+			ioeta_add_file(estim, full_path, deep);
 			return VR_OK;
 		case VA_DIR_LEAVE:
 			assert(0 && "Can't get here because of VR_SKIP_DIR_LEAVE.");

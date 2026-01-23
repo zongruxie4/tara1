@@ -494,6 +494,18 @@ get_file_size(const char path[])
 #endif
 }
 
+uint64_t
+get_target_file_size(const char path[])
+{
+	char path_real[PATH_MAX + 1];
+	if(os_realpath(path, path_real) != path_real)
+	{
+		return 0;
+	}
+
+	return get_file_size(path_real);
+}
+
 char **
 list_regular_files(const char path[], char *list[], int *len)
 {

@@ -28,7 +28,7 @@
 #include "private/traverser.h"
 
 static VisitResult eta_visitor(const char full_path[], VisitAction action,
-		void *param);
+		int deep, void *param);
 
 ioeta_estim_t *
 ioeta_alloc(void *param, io_cancellation_t cancellation)
@@ -63,14 +63,14 @@ ioeta_calculate(ioeta_estim_t *estim, const char path[], int shallow)
 	}
 	else
 	{
-		(void)traverse(path, &eta_visitor, estim);
+		(void)traverse(path, /*deep=*/0, &eta_visitor, estim);
 	}
 }
 
 /* Implementation of traverse() visitor for subtree copying.  Returns 0 on
  * success, otherwise non-zero is returned. */
 static VisitResult
-eta_visitor(const char full_path[], VisitAction action, void *param)
+eta_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
 	ioeta_estim_t *const estim = param;
 

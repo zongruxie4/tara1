@@ -26,25 +26,25 @@
 #include "../../utils/path.h"
 #include "../../utils/str.h"
 
-static VisitResult traverse_subtree(const char path[], subtree_visitor visitor,
-		void *param);
+static VisitResult traverse_subtree(const char path[], int deep,
+		subtree_visitor visitor, void *param);
 
 IoRes
-traverse(const char path[], subtree_visitor visitor, void *param)
+traverse(const char path[], int deep, subtree_visitor visitor, void *param)
 {
 	/* Duplication with traverse_subtree(), but this way traverse_subtree() can
 	 * use information from dirent structure to save some operations. */
 
 	VisitResult visit_result;
 
-	/* Treat symbolic links to directories as files as well. */
-	if(is_symlink(path) || !is_dir(path))
+	/* Optionally treat symbolic links to directories as files as well. */
+	if((!deep && is_symlink(path)) || !is_dir(path))
 	{
-		visit_result = visitor(path, VA_FILE, param);
+		visit_result = visitor(path, VA_FILE, deep, param);
 	}
 	else
 	{
-		visit_result = traverse_subtree(path, visitor, param);
+		visit_result = traverse_subtree(path, deep, visitor, param);
 	}
 
 	switch(visit_result)
@@ -58,7 +58,8 @@ traverse(const char path[], subtree_visitor visitor, void *param)
 
 /* A generic subtree traversing.  Returns status of visitation. */
 static VisitResult
-traverse_subtree(const char path[], subtree_visitor visitor, void *param)
+traverse_subtree(const char path[], int deep, subtree_visitor visitor,
+		void *param)
 {
 	DIR *dir;
 	struct dirent *d;
@@ -70,7 +71,7 @@ traverse_subtree(const char path[], subtree_visitor visitor, void *param)
 		return 1;
 	}
 
-	enter_result = visitor(path, VA_DIR_ENTER, param);
+	enter_result = visitor(path, VA_DIR_ENTER, deep, param);
 	if(enter_result == VR_ERROR || enter_result == VR_CANCELLED)
 	{
 		(void)os_closedir(dir);
@@ -88,14 +89,14 @@ traverse_subtree(const char path[], subtree_visitor visitor, void *param)
 		}
 
 		full_path = join_paths(path, d->d_name);
-		/* Treat symbolic links to directories as files as well. */
-		if(entry_is_dir(full_path, d))
+		/* Optionally treat symbolic links to directories as files as well. */
+		if(deep ? is_dirent_targets_dir(full_path, d) : entry_is_dir(full_path, d))
 		{
-			result = traverse_subtree(full_path, visitor, param);
+			result = traverse_subtree(full_path, deep, visitor, param);
 		}
 		else
 		{
-			result = visitor(full_path, VA_FILE, param);
+			result = visitor(full_path, VA_FILE, deep, param);
 		}
 		free(full_path);
 
@@ -108,7 +109,7 @@ traverse_subtree(const char path[], subtree_visitor visitor, void *param)
 
 	if(result == VR_OK && enter_result != VR_SKIP_DIR_LEAVE)
 	{
-		result = visitor(path, VA_DIR_LEAVE, param);
+		result = visitor(path, VA_DIR_LEAVE, deep, param);
 	}
 
 	return result;

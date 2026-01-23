@@ -43,15 +43,15 @@
 #include "iop.h"
 
 static VisitResult rm_visitor(const char full_path[], VisitAction action,
-		void *param);
+		int deep, void *param);
 static VisitResult cp_visitor(const char full_path[], VisitAction action,
-		void *param);
+		int deep, void *param);
 static IoRes mv_by_copy(io_args_t *args, int confirmed);
 static IoRes mv_replacing_all(io_args_t *args);
 static IoRes mv_replacing_files(io_args_t *args);
 static int is_file(const char path[]);
 static VisitResult mv_visitor(const char full_path[], VisitAction action,
-		void *param);
+		int deep, void *param);
 static VisitResult cp_mv_visitor(const char full_path[], VisitAction action,
 		void *param, int cp);
 static VisitResult vr_from_io_res(IoRes result);
@@ -60,13 +60,13 @@ IoRes
 ior_rm(io_args_t *args)
 {
 	const char *const path = args->arg1.path;
-	return traverse(path, &rm_visitor, args);
+	return traverse(path, /*deep=*/0, &rm_visitor, args);
 }
 
 /* Implementation of traverse() visitor for subtree removal.  Returns 0 on
  * success, otherwise non-zero is returned. */
 static VisitResult
-rm_visitor(const char full_path[], VisitAction action, void *param)
+rm_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
 	io_args_t *const rm_args = param;
 	VisitResult result = VR_OK;
@@ -154,13 +154,13 @@ ior_cp(io_args_t *args)
 		}
 	}
 
-	return traverse(src, &cp_visitor, args);
+	return traverse(src, /*deep=*/0, &cp_visitor, args);
 }
 
 /* Implementation of traverse() visitor for subtree copying.  Returns 0 on
  * success, otherwise non-zero is returned. */
 static VisitResult
-cp_visitor(const char full_path[], VisitAction action, void *param)
+cp_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
 	return cp_mv_visitor(full_path, action, param, 1);
 }
@@ -360,7 +360,7 @@ mv_replacing_files(io_args_t *args)
 		}
 	}
 
-	return traverse(src, &mv_visitor, args);
+	return traverse(src, /*deep=*/0, &mv_visitor, args);
 }
 
 /* Checks that path points to a file or symbolic link.  Returns non-zero if so,
@@ -375,7 +375,7 @@ is_file(const char path[])
 /* Implementation of traverse() visitor for subtree moving.  Returns 0 on
  * success, otherwise non-zero is returned. */
 static VisitResult
-mv_visitor(const char full_path[], VisitAction action, void *param)
+mv_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
 	return cp_mv_visitor(full_path, action, param, 0);
 }

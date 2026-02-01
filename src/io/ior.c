@@ -122,6 +122,7 @@ ior_cp(io_args_t *args)
 {
 	const char *const src = args->arg1.src;
 	const char *const dst = args->arg2.dst;
+	const int deep_copying = args->arg4.deep_copying;
 
 	if(is_in_subtree(dst, src, 0))
 	{
@@ -154,7 +155,7 @@ ior_cp(io_args_t *args)
 		}
 	}
 
-	return traverse(src, /*deep=*/0, &cp_visitor, args);
+	return traverse(src, deep_copying, &cp_visitor, args);
 }
 
 /* Implementation of traverse() visitor for subtree copying.  Returns 0 on
@@ -432,6 +433,7 @@ cp_mv_visitor(const char full_path[], VisitAction action, void *param, int cp)
 					/* It's safe to always use fast file cloning on moving files. */
 					.arg4.fast_file_cloning = cp ? cp_args->arg4.fast_file_cloning : 1,
 					.arg4.data_sync = cp_args->arg4.data_sync,
+					.arg4.deep_copying = cp ? cp_args->arg4.deep_copying : 0,
 
 					.cancellation = cp_args->cancellation,
 					.confirm = cp_args->confirm,

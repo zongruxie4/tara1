@@ -674,7 +674,7 @@ put_next(int force)
 		}
 	}
 
-	int op;
+	OPS op;
 	if(put_confirm.op == CMLO_LINK_REL || put_confirm.op == CMLO_LINK_ABS)
 	{
 		op = OP_SYMLINK;

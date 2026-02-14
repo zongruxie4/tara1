@@ -80,8 +80,6 @@ SETUP()
 	static int option_changed;
 	optval_t def = { .str_val = "/tmp" };
 
-	cfg.slow_fs_list = strdup("");
-
 	init_builtin_functions();
 
 	stats.line = wcsdup(L"set ");
@@ -120,8 +118,6 @@ TEARDOWN()
 	curr_stats.cs = NULL;
 
 	restore_cwd(saved_cwd);
-
-	update_string(&cfg.slow_fs_list, NULL);
 
 	free(stats.line);
 	vle_opts_reset();

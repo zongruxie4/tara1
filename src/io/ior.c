@@ -53,7 +53,7 @@ static int is_file(const char path[]);
 static VisitResult mv_visitor(const char full_path[], VisitAction action,
 		int deep, void *param);
 static VisitResult cp_mv_visitor(const char full_path[], VisitAction action,
-		void *param, int cp);
+		void *param, int cp, int deep);
 static VisitResult vr_from_io_res(IoRes result);
 
 IoRes
@@ -163,7 +163,7 @@ ior_cp(io_args_t *args)
 static VisitResult
 cp_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
-	return cp_mv_visitor(full_path, action, param, 1);
+	return cp_mv_visitor(full_path, action, param, /*cp=*/1, deep);
 }
 
 IoRes
@@ -378,13 +378,14 @@ is_file(const char path[])
 static VisitResult
 mv_visitor(const char full_path[], VisitAction action, int deep, void *param)
 {
-	return cp_mv_visitor(full_path, action, param, 0);
+	return cp_mv_visitor(full_path, action, param, /*cp=*/0, /*deep=*/0);
 }
 
 /* Generic implementation of traverse() visitor for subtree copying/moving.
  * Returns 0 on success, otherwise non-zero is returned. */
 static VisitResult
-cp_mv_visitor(const char full_path[], VisitAction action, void *param, int cp)
+cp_mv_visitor(const char full_path[], VisitAction action, void *param, int cp,
+		int deep)
 {
 	io_args_t *const cp_args = param;
 	const char *dst_full_path;
@@ -433,7 +434,8 @@ cp_mv_visitor(const char full_path[], VisitAction action, void *param, int cp)
 					/* It's safe to always use fast file cloning on moving files. */
 					.arg4.fast_file_cloning = cp ? cp_args->arg4.fast_file_cloning : 1,
 					.arg4.data_sync = cp_args->arg4.data_sync,
-					.arg4.deep_copying = cp ? cp_args->arg4.deep_copying : 0,
+					/* Deep copying may be suppressed for links that can't be copied. */
+					.arg4.deep_copying = cp ? deep && cp_args->arg4.deep_copying : 0,
 
 					.cancellation = cp_args->cancellation,
 					.confirm = cp_args->confirm,

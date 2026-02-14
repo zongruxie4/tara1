@@ -240,5 +240,60 @@ TEST(nested_symlink_to_dir_is_dir_after_copy, IF(not_windows))
 	}
 }
 
+TEST(dir_link_loop_is_avoided_on_deep_copy, IF(not_windows))
+{
+	{
+		io_args_t args = {
+			.arg1.path = SANDBOX_PATH "/dir",
+			.arg3.mode = 0700,
+		};
+		ioe_errlst_init(&args.result.errors);
+
+		assert_int_equal(IO_RES_SUCCEEDED, iop_mkdir(&args));
+		assert_int_equal(0, args.result.errors.error_count);
+	}
+	{
+		io_args_t args = {
+			.arg1.path = ".",
+			.arg2.target = SANDBOX_PATH "/dir/parent",
+		};
+		assert_int_equal(IO_RES_SUCCEEDED, iop_ln(&args));
+	}
+
+	{
+		io_args_t args = {
+			.arg1.src = SANDBOX_PATH "/dir",
+			.arg2.dst = SANDBOX_PATH "/dir-copy",
+			.arg4.deep_copying = 1,
+		};
+		ioe_errlst_init(&args.result.errors);
+
+		assert_int_equal(IO_RES_SUCCEEDED, ior_cp(&args));
+		assert_int_equal(0, args.result.errors.error_count);
+	}
+
+	{
+		io_args_t args = {
+			.arg1.path = SANDBOX_PATH "/dir",
+		};
+		ioe_errlst_init(&args.result.errors);
+
+		assert_int_equal(IO_RES_SUCCEEDED, ior_rm(&args));
+		assert_int_equal(0, args.result.errors.error_count);
+	}
+	{
+		io_args_t args = {
+			.arg1.path = SANDBOX_PATH "/dir-copy/parent",
+		};
+		assert_int_equal(IO_RES_SUCCEEDED, iop_rmfile(&args));
+	}
+	{
+		io_args_t args = {
+			.arg1.path = SANDBOX_PATH "/dir-copy",
+		};
+		assert_int_equal(IO_RES_SUCCEEDED, iop_rmdir(&args));
+	}
+}
+
 /* vim: set tabstop=2 softtabstop=2 shiftwidth=2 noexpandtab cinoptions-=(0 : */
 /* vim: set cinoptions+=t0 filetype=c : */

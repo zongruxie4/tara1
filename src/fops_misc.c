@@ -160,7 +160,8 @@ fops_delete(view_t *view, int reg, int use_trash)
 	ops = fops_get_ops(OP_REMOVE, use_trash ? "deleting" : "Deleting", curr_dir,
 			curr_dir);
 
-	nmarked_files = fops_enqueue_marked_files(ops, view, NULL, use_trash);
+	nmarked_files =
+		fops_enqueue_marked_files(ops, view, NULL, use_trash, /*deep=*/0);
 
 	entry = NULL;
 	i = 0;
@@ -407,7 +408,7 @@ delete_files_in_bg(bg_op_t *bg_op, void *arg)
 		{
 			const char *const src = args->sel_list[i];
 			char *trash_dir = (args->use_trash ? trash_pick_dir(src) : args->path);
-			ops_enqueue(ops, src, trash_dir);
+			ops_enqueue(ops, src, trash_dir, /*deep=*/0);
 			if(trash_dir != args->path)
 			{
 				free(trash_dir);
@@ -696,7 +697,7 @@ retarget_many(view_t *view, char *files[], int nfiles)
 	{
 		char full_path[PATH_MAX + 1];
 		get_full_path_of(entry, sizeof(full_path), full_path);
-		ops_enqueue(ops, full_path, full_path);
+		ops_enqueue(ops, full_path, full_path, /*deep=*/0);
 	}
 
 	int i = 0;
@@ -843,7 +844,8 @@ fops_clone(view_t *view, char *list[], int nlines, int force, int copies)
 	ops_t *ops = fops_get_ops(OP_COPY, "Cloning", curr_dir,
 			with_dir ? list[0] : curr_dir);
 
-	int nmarked_files = fops_enqueue_marked_files(ops, view, dst_path, 0);
+	int nmarked_files =
+		fops_enqueue_marked_files(ops, view, dst_path, /*to_trash=*/0, /*deep=*/0);
 
 	const int custom_fnames = (nlines > 0);
 
@@ -1411,7 +1413,7 @@ fops_chown(int u, int g, uid_t uid, gid_t gid)
 			replace_home_part(curr_dir));
 
 	ops = fops_get_ops(OP_CHOWN, "re-owning", curr_dir, curr_dir);
-	(void)fops_enqueue_marked_files(ops, view, NULL, 0);
+	(void)fops_enqueue_marked_files(ops, view, NULL, /*to_trash=*/0, /*deep=*/0);
 
 	fops_append_marked_files(view, undo_msg, NULL);
 	un_group_open(undo_msg);

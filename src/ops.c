@@ -218,7 +218,7 @@ ops_describe(const ops_t *ops)
 }
 
 void
-ops_enqueue(ops_t *ops, const char src[], const char dst[])
+ops_enqueue(ops_t *ops, const char src[], const char dst[], int deep)
 {
 	++ops->total;
 
@@ -264,7 +264,7 @@ ops_enqueue(ops_t *ops, const char src[], const char dst[])
 		}
 	}
 
-	ioeta_calculate(ops->estim, src, ops->shallow_eta, /*deep=*/0);
+	ioeta_calculate(ops->estim, src, ops->shallow_eta, deep);
 }
 
 void
@@ -514,6 +514,7 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		ConflictAction conflict_action)
 {
 	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+	const int deep_copy = ((data_flags(data) & DF_DEEP_COPY) != 0);
 	const int fast_file_cloning = (ops == NULL)
 	                             ? cfg.fast_file_cloning
 	                             : ops->fast_file_cloning;
@@ -535,9 +536,10 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		}
 
 		snprintf(cmd, sizeof(cmd),
-				"cp %s %s -R " PRESERVE_FLAGS " %s %s",
+				"cp %s %s %s -R " PRESERVE_FLAGS " %s %s",
 				(conflict_action == CA_FAIL) ? NO_CLOBBER : "",
 				fast_file_cloning ? REFLINK_AUTO : "",
+				deep_copy ? "-L" : "",
 				escaped_src, escaped_dst);
 		LOG_INFO_MSG("Running cp command: \"%s\"", cmd);
 		OpsResult result = run_operation_command(ops, cmd, cancellable);
@@ -567,8 +569,10 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 			free(escaped_src);
 			free(escaped_dst);
 
-			if(is_vista_and_above())
+			if(!deep_copy && is_vista_and_above())
+			{
 				strcat(cmd, "/B ");
+			}
 			if(conflict_action != CA_FAIL)
 			{
 				strcat(cmd, "/Y ");
@@ -596,6 +600,7 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		.arg4 = {
 			.fast_file_cloning = fast_file_cloning,
 			.data_sync = data_sync,
+			.deep_copying = deep_copy,
 		},
 	};
 	return exec_io_op(ops, &ior_cp, &args, cancellable);

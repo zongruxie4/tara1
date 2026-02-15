@@ -51,7 +51,7 @@ verify_args_t;
 
 static int cp_file(const char src_dir[], const char dst_dir[], const char src[],
 		const char dst[], CopyMoveLikeOp op, int cancellable, ops_t *ops,
-		int force);
+		int force, int deep);
 static int is_erroneous(view_t *view, const char dst_dir[], int force);
 static int cpmv_prepare(view_t *view, char ***list, int *nlines,
 		CopyMoveLikeOp op, int ignore_conflicts, char undo_msg[],
@@ -64,15 +64,17 @@ static const char * cmlo_to_str(CopyMoveLikeOp op);
 static void cpmv_files_in_bg(bg_op_t *bg_op, void *arg);
 static void set_cpmv_bg_descr(bg_op_t *bg_op, bg_args_t *args, size_t i);
 static void cpmv_file_in_bg(ops_t *ops, const char src[], const char dst[],
-		int move, int force, int skip, int from_trash, const char dst_dir[]);
+		int move, int force, int skip, int deep, int from_trash,
+		const char dst_dir[]);
 static int cp_file_f(const char src[], const char dst[], CopyMoveLikeOp op,
-		int bg, int cancellable, ops_t *ops, int force);
+		int bg, int cancellable, ops_t *ops, int force, int deep);
 
 int
 fops_cpmv(view_t *view, char *list[], int nlines, CopyMoveLikeOp op, int flags)
 {
 	const int force = (flags & CMLF_FORCE);
 	const int skip = (flags & CMLF_SKIP);
+	const int deep = (flags & CMLF_DEEP);
 
 	int err;
 	int nmarked_files;
@@ -122,7 +124,8 @@ fops_cpmv(view_t *view, char *list[], int nlines, CopyMoveLikeOp op, int flags)
 			return 0;
 	}
 
-	nmarked_files = fops_enqueue_marked_files(ops, view, dst_dir, 0);
+	nmarked_files =
+		fops_enqueue_marked_files(ops, view, dst_dir, /*to_trash=*/0, deep);
 
 	un_group_open(undo_msg);
 	i = 0;
@@ -188,7 +191,7 @@ fops_cpmv(view_t *view, char *list[], int nlines, CopyMoveLikeOp op, int flags)
 		else
 		{
 			err = cp_file(entry->origin, dst_dir, entry->name, dst, op, 1, ops,
-					0);
+					0, deep);
 		}
 
 		ops_advance(ops, err == 0);
@@ -265,7 +268,7 @@ fops_replace_entry(ops_t *ops, view_t *src, const dir_entry_t *src_entry,
 	{
 		/* Not forcing as destination path shouldn't exist. */
 		if(cp_file_f(src_full, dst_full, CMLO_COPY, /*bg=*/0, /*cancellable=*/1,
-					ops, /*force=*/0) == 0 && !dst_exists)
+					ops, /*force=*/0, /*deep=*/0) == 0 && !dst_exists)
 		{
 			/* Update the destination entry to not be fake. */
 			replace_string(&dst_entry->name, src_entry->name);
@@ -280,14 +283,15 @@ fops_replace_entry(ops_t *ops, view_t *src, const dir_entry_t *src_entry,
  * parts. */
 static int
 cp_file(const char src_dir[], const char dst_dir[], const char src[],
-		const char dst[], CopyMoveLikeOp op, int cancellable, ops_t *ops, int force)
+		const char dst[], CopyMoveLikeOp op, int cancellable, ops_t *ops, int force,
+		int deep)
 {
 	char full_src[PATH_MAX + 1], full_dst[PATH_MAX + 1];
 
 	to_canonic_path(src, src_dir, full_src, sizeof(full_src));
 	to_canonic_path(dst, dst_dir, full_dst, sizeof(full_dst));
 
-	return cp_file_f(full_src, full_dst, op, 0, cancellable, ops, force);
+	return cp_file_f(full_src, full_dst, op, 0, cancellable, ops, force, deep);
 }
 
 int
@@ -295,6 +299,7 @@ fops_cpmv_bg(view_t *view, char *list[], int nlines, int move, int flags)
 {
 	const int force = (flags & CMLF_FORCE);
 	const int skip = (flags & CMLF_SKIP);
+	const int deep = (flags & CMLF_DEEP);
 
 	int err;
 	size_t i;
@@ -311,6 +316,7 @@ fops_cpmv_bg(view_t *view, char *list[], int nlines, int move, int flags)
 	args->move = move;
 	args->force = force;
 	args->skip = skip;
+	args->deep = deep;
 
 	const int ignore_conflicts = (force || skip);
 	err = cpmv_prepare(view, &list, &args->nlines, move ? CMLO_MOVE : CMLO_COPY,
@@ -601,7 +607,7 @@ cpmv_files_in_bg(bg_op_t *bg_op, void *arg)
 		{
 			const char *const src = args->sel_list[i];
 			const char *const dst = args->list[i];
-			ops_enqueue(ops, src, dst);
+			ops_enqueue(ops, src, dst, args->deep);
 		}
 	}
 
@@ -613,7 +619,7 @@ cpmv_files_in_bg(bg_op_t *bg_op, void *arg)
 		set_cpmv_bg_descr(bg_op, args, i);
 
 		cpmv_file_in_bg(ops, src, dst, args->move, args->force, args->skip,
-				args->is_in_trash[i], args->path);
+				args->deep, args->is_in_trash[i], args->path);
 		++bg_op->done;
 	}
 
@@ -658,7 +664,7 @@ set_cpmv_bg_descr(bg_op_t *bg_op, bg_args_t *args, size_t i)
 /* Actual implementation of background file copying/moving. */
 static void
 cpmv_file_in_bg(ops_t *ops, const char src[], const char dst[], int move,
-		int force, int skip, int from_trash, const char dst_dir[])
+		int force, int skip, int deep, int from_trash, const char dst_dir[])
 {
 	char dst_full[PATH_MAX + 1];
 	snprintf(dst_full, sizeof(dst_full), "%s/%s", dst_dir, dst);
@@ -682,7 +688,7 @@ cpmv_file_in_bg(ops_t *ops, const char src[], const char dst[], int move,
 	}
 	else
 	{
-		(void)cp_file_f(src, dst_full, CMLO_COPY, 1, 1, ops, 0);
+		(void)cp_file_f(src, dst_full, CMLO_COPY, 1, 1, ops, 0, deep);
 	}
 }
 
@@ -690,7 +696,7 @@ cpmv_file_in_bg(ops_t *ops, const char src[], const char dst[], int move,
  * non-zero is returned. */
 static int
 cp_file_f(const char src[], const char dst[], CopyMoveLikeOp op, int bg,
-		int cancellable, ops_t *ops, int force)
+		int cancellable, ops_t *ops, int force, int deep)
 {
 	if(strcmp(src, dst) == 0)
 	{
@@ -719,7 +725,9 @@ cp_file_f(const char src[], const char dst[], CopyMoveLikeOp op, int bg,
 		}
 	}
 
-	void *flags = ops_flags(cancellable ? DF_NONE : DF_NO_CANCEL);
+	int f = (cancellable ? DF_NONE : DF_NO_CANCEL)
+	      | (deep ? DF_DEEP_COPY : DF_NONE);
+	void *flags = ops_flags(f);
 	OpsResult result = perform_operation(file_op, ops, flags, src, dst);
 	if(result != OPS_SUCCEEDED)
 	{

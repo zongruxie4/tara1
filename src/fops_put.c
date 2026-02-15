@@ -235,7 +235,7 @@ put_files_in_bg(bg_op_t *bg_op, void *arg)
 		{
 			const char *const src = args->sel_list[i];
 			const char *const dst = args->list[i];
-			ops_enqueue(ops, src, dst);
+			ops_enqueue(ops, src, dst, /*deep=*/0);
 		}
 	}
 
@@ -346,7 +346,7 @@ initiate_put_files(view_t *view, int at, CopyMoveLikeOp op, const char descr[],
 
 	for(i = 0; i < reg->nfiles && !ui_cancellation_requested(); ++i)
 	{
-		ops_enqueue(put_confirm.ops, reg->files[i], dst_dir);
+		ops_enqueue(put_confirm.ops, reg->files[i], dst_dir, /*deep=*/0);
 	}
 
 	ui_cancellation_pop();

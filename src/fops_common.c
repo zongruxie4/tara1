@@ -922,7 +922,7 @@ fops_is_dir_entry(const char full_path[], const struct dirent *dentry)
 
 int
 fops_enqueue_marked_files(ops_t *ops, view_t *view, const char dst_hint[],
-		int to_trash)
+		int to_trash, int deep)
 {
 	int nmarked_files = 0;
 	dir_entry_t *entry = NULL;
@@ -938,12 +938,12 @@ fops_enqueue_marked_files(ops_t *ops, view_t *view, const char dst_hint[],
 		if(to_trash)
 		{
 			char *const trash_dir = trash_pick_dir(entry->origin);
-			ops_enqueue(ops, full_path, trash_dir);
+			ops_enqueue(ops, full_path, trash_dir, deep);
 			free(trash_dir);
 		}
 		else
 		{
-			ops_enqueue(ops, full_path, dst_hint);
+			ops_enqueue(ops, full_path, dst_hint, deep);
 		}
 
 		++nmarked_files;

@@ -62,7 +62,8 @@ typedef enum
 	DF_NONE         =      0, /* No flags. */
 	DF_MAKE_PARENTS = 1 << 0, /* Parent directories should be created. */
 	DF_NO_CANCEL    = 1 << 1, /* Cancellation is not enabled for the operation. */
-	DF_LIMIT_VALUE  = 1 << 2, /* Indirect size of the flags. */
+	DF_DEEP_COPY    = 1 << 2, /* Copying should dereference source symlinks. */
+	DF_LIMIT_VALUE  = 1 << 3, /* Indirect size of the flags. */
 }
 DataFlags;
 
@@ -152,7 +153,7 @@ const char * ops_describe(const ops_t *ops);
 
 /* Puts new item to the ops.  Destination argument is a hint to optimize
  * estimating performance, it can be NULL. */
-void ops_enqueue(ops_t *ops, const char src[], const char dst[]);
+void ops_enqueue(ops_t *ops, const char src[], const char dst[], int deep);
 
 /* Advances ops to the next item. */
 void ops_advance(ops_t *ops, int succeeded);

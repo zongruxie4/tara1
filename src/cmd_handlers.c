@@ -3914,6 +3914,11 @@ cpmv_cmd(const cmd_info_t *cmd_info, int move)
 	{
 		return CMDS_ERR_CUSTOM;
 	}
+	if(move && (flags & CMLF_DEEP))
+	{
+		ui_sb_err("-deep doesn't apply to moving");
+		return CMDS_ERR_CUSTOM;
+	}
 
 	flags |= (cmd_info->emark ? CMLF_FORCE : CMLF_NONE);
 
@@ -4365,6 +4370,12 @@ link_cmd(const cmd_info_t *cmd_info, int absolute)
 		return CMDS_ERR_CUSTOM;
 	}
 
+	if(flags & CMLF_DEEP)
+	{
+		ui_sb_err("-deep doesn't apply to making links");
+		return CMDS_ERR_CUSTOM;
+	}
+
 	flags |= (cmd_info->emark ? CMLF_FORCE : CMLF_NONE);
 
 	flist_set_marking(curr_view, 0);
@@ -4408,6 +4419,10 @@ parse_cpmv_flags(int *argc, char ***argv)
 		if(strcmp(argv[0][i], "-skip") == 0)
 		{
 			flags |= CMLF_SKIP;
+		}
+		else if(strcmp(argv[0][i], "-deep") == 0)
+		{
+			flags |= CMLF_DEEP;
 		}
 		else
 		{

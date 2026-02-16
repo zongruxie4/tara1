@@ -630,7 +630,11 @@ TEST(highlight_columns_are_completed)
 
 TEST(command_options_are_completed)
 {
-	ASSERT_COMPLETION(L"copy -", L"copy -skip");
+	ASSERT_COMPLETION(L"move -", L"move -skip");
+	ASSERT_NEXT_MATCH("-skip");
+
+	ASSERT_COMPLETION(L"copy -", L"copy -deep");
+	ASSERT_NEXT_MATCH("-skip");
 
 	other_view = &rwin;
 #ifndef _WIN32

@@ -1,4 +1,4 @@
-.TH VIFM 1 "23 January 2026" "vifm 0.15"
+.TH VIFM 1 "17 February 2026" "vifm 0.15"
 .\" ---------------------------------------------------------------------------
 .SH NAME
 .\" ---------------------------------------------------------------------------
@@ -1939,6 +1939,9 @@ directory of other view).  "!" forces overwrite.
 copy files to directory of other view giving each next file a corresponding name
 from the argument list.  "!" forces overwrite
 .TP
+.BI ":[range]co[py][!?] -deep ...[ &]"
+see "\-deep parameter" below.
+.TP
 .BI ":[range]co[py][!?] -skip ...[ &]"
 see "\-skip parameter" below.
 .LP
@@ -3620,9 +3623,23 @@ Some of the command-line commands accept parameters in the form of
 parameters and positional arguments.  Items from the two groups cannot be
 interleaved and parameters always come first.  List of parameters is
 terminated implicitly by the first argument that doesn't start with a
-dash ("-") or explicitly via "--" separator (needs to be a separate
-argument), which is just discarded.  These strict rules allow arbitrary
-positional arguments, such as file names that start with a dash.
+dash ("-") or explicitly via "--" separator (must be a separate argument),
+which is just discarded.  These strict rules allow arbitrary positional
+arguments, such as file names that start with a dash.
+
+.TP
+.BI "\-deep parameter"
+This parameter makes :copy resolve symbolic links in the source.
+
+Note that when 'syscalls' is on, the behaviour differs from that of
+`cp \-L` (same as `cp \-\-dereference`) in cases when a symbolic link's target
+can't be meaningfully copied:
+ - when link's target doesn't exist (broken link)
+ - when link to a directory creates a cycle
+.br
+In both cases `cp` prints an error and doesn't create anything at the
+destination but vifm copies symbolic links as is to preserve file structure.
+This implementation detail may change in the future or become configurable.
 
 .TP
 .BI "\-skip parameter"

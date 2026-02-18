@@ -61,7 +61,7 @@ conflict_prompt_data_t;
 
 static void put_files_in_bg(bg_op_t *bg_op, void *arg);
 static int initiate_put_files(view_t *view, int at, CopyMoveLikeOp op,
-		const char descr[], int reg_name);
+		const char descr[], int reg_name, int deep);
 static void reset_put_confirm(CopyMoveLikeOp main_op, const char descr[],
 		const char dst_dir[]);
 static OPS cmlo_to_op(CopyMoveLikeOp op);
@@ -103,6 +103,7 @@ static struct
 	int allow_merge_all; /* Allow merging of files in directories by default. */
 	int merge;           /* Merge conflicting directory once. */
 	int merge_all;       /* Merge all conflicting directories. */
+	int deep;            /* Follow symbolic links in the source of copy. */
 	ops_t *ops;          /* Currently running operation. */
 	char *dst_name;      /* Name of destination file. */
 	char *dst_dir;       /* Destination path. */
@@ -112,15 +113,15 @@ static struct
 put_confirm;
 
 int
-fops_put(view_t *view, int at, int reg_name, int move)
+fops_put(view_t *view, int at, int reg_name, int move, int deep)
 {
 	const CopyMoveLikeOp op = move ? CMLO_MOVE : CMLO_COPY;
 	const char *const descr = move ? "Putting" : "putting";
-	return initiate_put_files(view, at, op, descr, reg_name);
+	return initiate_put_files(view, at, op, descr, reg_name, deep);
 }
 
 int
-fops_put_bg(view_t *view, int at, int reg_name, int move)
+fops_put_bg(view_t *view, int at, int reg_name, int move, int deep)
 {
 	char task_desc[COMMAND_GROUP_INFO_LEN];
 	size_t task_desc_len;
@@ -148,6 +149,7 @@ fops_put_bg(view_t *view, int at, int reg_name, int move)
 
 	args = calloc(1, sizeof(*args));
 	args->move = move;
+	args->deep = deep;
 	copy_str(args->path, sizeof(args->path), dst_dir);
 
 	snprintf(task_desc, sizeof(task_desc), "%cut in %s: ", move ? 'P' : 'p',
@@ -235,7 +237,7 @@ put_files_in_bg(bg_op_t *bg_op, void *arg)
 		{
 			const char *const src = args->sel_list[i];
 			const char *const dst = args->list[i];
-			ops_enqueue(ops, src, dst, /*deep=*/0);
+			ops_enqueue(ops, src, dst, args->deep);
 		}
 	}
 
@@ -266,7 +268,9 @@ put_files_in_bg(bg_op_t *bg_op, void *arg)
 		}
 
 		bg_op_set_descr(bg_op, src);
-		(void)perform_operation(ops->main_op, ops, ops_flags(DF_NONE), src, dst);
+
+		void *flags = ops_flags(args->deep ? DF_DEEP_COPY : DF_NONE);
+		(void)perform_operation(ops->main_op, ops, flags, src, dst);
 	}
 
 	fops_free_bg_args(args);
@@ -276,14 +280,14 @@ int
 fops_put_links(view_t *view, int reg_name, int relative)
 {
 	const CopyMoveLikeOp op = relative ? CMLO_LINK_REL : CMLO_LINK_ABS;
-	return initiate_put_files(view, -1, op, "Symlinking", reg_name);
+	return initiate_put_files(view, -1, op, "Symlinking", reg_name, /*deep=*/0);
 }
 
 /* Performs preparations necessary for putting files/links.  Returns new value
  * for save_msg flag. */
 static int
 initiate_put_files(view_t *view, int at, CopyMoveLikeOp op, const char descr[],
-		int reg_name)
+		int reg_name, int deep)
 {
 	int i;
 	const char *const dst_dir = fops_get_dst_dir(view, at);
@@ -306,6 +310,7 @@ initiate_put_files(view_t *view, int at, CopyMoveLikeOp op, const char descr[],
 	put_confirm.op = op;
 	put_confirm.reg = reg;
 	put_confirm.view = view;
+	put_confirm.deep = deep;
 
 	/* Map each element onto itself initially. */
 	put_confirm.file_order = reallocarray(NULL, reg->nfiles,
@@ -346,7 +351,7 @@ initiate_put_files(view_t *view, int at, CopyMoveLikeOp op, const char descr[],
 
 	for(i = 0; i < reg->nfiles && !ui_cancellation_requested(); ++i)
 	{
-		ops_enqueue(put_confirm.ops, reg->files[i], dst_dir, /*deep=*/0);
+		ops_enqueue(put_confirm.ops, reg->files[i], dst_dir, deep);
 	}
 
 	ui_cancellation_pop();
@@ -700,7 +705,7 @@ put_next(int force)
 	fops_progress_msg("Putting files", put_confirm.index,
 			put_confirm.reg->nfiles);
 
-	void *flags = ops_flags(DF_NONE);
+	void *flags = ops_flags(put_confirm.deep ? DF_DEEP_COPY : DF_NONE);
 
 	/* Merging directory on move requires special handling as it can't be done by
 	 * `mv` and it's better to use the same code regardless of the state of

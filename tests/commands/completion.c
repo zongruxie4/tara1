@@ -628,6 +628,12 @@ TEST(highlight_columns_are_completed)
 	curr_stats.vlua = NULL;
 }
 
+TEST(put_is_completed)
+{
+	ASSERT_COMPLETION(L"put ", L"put ");
+	ASSERT_COMPLETION(L"put -", L"put -deep");
+}
+
 TEST(command_options_are_completed)
 {
 	ASSERT_COMPLETION(L"move -", L"move -skip");

@@ -34,9 +34,9 @@
 	Added example of handling .deb-files to sample vifmrc.  Patch by Kirill
 	Rekhov.
 
-	Added -deep parameter to :copy command to resolve symbolic links while
-	copying.  Thanks to Jose Riha (a.k.a. jose1711) and an anonymous at Vifm
-	Q2A site.
+	Added -deep parameter to :copy and :put commands that makes them resolve
+	symbolic links while copying.  Thanks to Jose Riha (a.k.a. jose1711) and
+	an anonymous at Vifm Q2A site.
 
 	Updated utf8proc to v2.11.2.
 

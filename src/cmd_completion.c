@@ -317,7 +317,7 @@ non_path_completion(completion_data_t *data)
 		}
 	}
 	else if(is_option(data->cmd_info) && (id == COM_COPY || id == COM_MOVE ||
-				id == COM_ALINK || id == COM_RLINK))
+				id == COM_ALINK || id == COM_RLINK || id == COM_PUT))
 	{
 		complete_option(id, arg);
 	}
@@ -328,8 +328,9 @@ non_path_completion(completion_data_t *data)
 			complete_view(arg);
 		}
 	}
-	else
+	else if(id != COM_PUT)
 	{
+		/* Perform path completion. */
 		return -1;
 	}
 
@@ -1130,7 +1131,7 @@ complete_winrun(const char str[])
 	complete_from_string_list(str, win_marks, ARRAY_LEN(win_marks), 0);
 }
 
-/* Completes an option of :copy/:move/:alink/:rlink. */
+/* Completes an option of :copy/:move/:alink/:rlink/:put. */
 static void
 complete_option(int cmd_id, const char str[])
 {
@@ -1146,6 +1147,10 @@ complete_option(int cmd_id, const char str[])
 		case COM_COPY:
 			opts = lines;
 			opt_count = 2;
+			break;
+		case COM_PUT:
+			opts = &lines[0];
+			opt_count = 1;
 			break;
 
 		default:

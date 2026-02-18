@@ -747,7 +747,7 @@ const cmd_add_t cmds_list[] = {
 	  .descr = "push onto directory stack",
 	  .flags = HAS_EMARK | HAS_QUOTED_ARGS | HAS_COMMENT | HAS_ENVVARS,
 	  .handler = &pushd_cmd,       .min_args = 0,   .max_args = 2, },
-	{ .name = "put",               .abbr = "pu",    .id = -1,
+	{ .name = "put",               .abbr = "pu",    .id = COM_PUT,
 	  .descr = "paste files from a register",
 	  .flags = HAS_EMARK | HAS_RANGE | HAS_BG_FLAG,
 	  .handler = &put_cmd,         .min_args = 0,   .max_args = 1, },
@@ -4144,9 +4144,30 @@ put_cmd(const cmd_info_t *cmd_info)
 	int reg = DEFAULT_REG_NAME;
 	const int at = get_at(curr_view, cmd_info);
 
-	if(cmd_info->argc == 1)
+	const int move = cmd_info->emark;
+
+	int argc = cmd_info->argc;
+	char **argv = cmd_info->argv;
+	const int flags = parse_cpmv_flags(&argc, &argv);
+	if(flags < 0)
 	{
-		const int error = get_reg(cmd_info->argv[0], &reg);
+		return CMDS_ERR_CUSTOM;
+	}
+	if(flags & CMLF_SKIP)
+	{
+		ui_sb_err("-skip doesn't apply to putting");
+		return CMDS_ERR_CUSTOM;
+	}
+	const int deep = ((flags & CMLF_DEEP) != 0);
+	if(move && deep)
+	{
+		ui_sb_err("-deep doesn't apply to moving");
+		return CMDS_ERR_CUSTOM;
+	}
+
+	if(argc == 1)
+	{
+		const int error = get_reg(argv[0], &reg);
 		if(error != 0)
 		{
 			return error;
@@ -4155,10 +4176,10 @@ put_cmd(const cmd_info_t *cmd_info)
 
 	if(cmd_info->bg)
 	{
-		return fops_put_bg(curr_view, at, reg, cmd_info->emark) != 0;
+		return fops_put_bg(curr_view, at, reg, move, deep) != 0;
 	}
 
-	return fops_put(curr_view, at, reg, cmd_info->emark) != 0;
+	return fops_put(curr_view, at, reg, move, deep) != 0;
 }
 
 static int

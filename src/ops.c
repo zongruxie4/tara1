@@ -126,6 +126,7 @@ static OpsResult op_symlink(ops_t *ops, void *data, const char src[],
 		const char dst[]);
 static OpsResult op_mkdir(ops_t *ops, void *data, const char src[],
 		const char dst[]);
+static DataFlags data_flags(void *data);
 static OpsResult op_rmdir(ops_t *ops, void *data, const char src[],
 		const char dst[]);
 static OpsResult op_mkfile(ops_t *ops, void *data, const char src[],
@@ -217,7 +218,7 @@ ops_describe(const ops_t *ops)
 }
 
 void
-ops_enqueue(ops_t *ops, const char src[], const char dst[])
+ops_enqueue(ops_t *ops, const char src[], const char dst[], int deep)
 {
 	++ops->total;
 
@@ -263,7 +264,7 @@ ops_enqueue(ops_t *ops, const char src[], const char dst[])
 		}
 	}
 
-	ioeta_calculate(ops->estim, src, ops->shallow_eta);
+	ioeta_calculate(ops->estim, src, ops->shallow_eta, deep);
 }
 
 void
@@ -293,6 +294,16 @@ ops_free(ops_t *ops)
 	free(ops->base_dir);
 	free(ops->target_dir);
 	free(ops);
+}
+
+void *
+ops_flags(DataFlags flags)
+{
+	if(flags == DF_NONE)
+	{
+		return NULL;
+	}
+	return (void *)(uintptr_t)flags;
 }
 
 OpsResult
@@ -354,6 +365,8 @@ op_remove(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+
 	const char *const delete_prg = (ops == NULL)
 	                             ? cfg.delete_prg
 	                             : ops->delete_prg;
@@ -362,7 +375,6 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		char *escaped;
 		char cmd[2*PATH_MAX + 1];
-		const int cancellable = (data == NULL);
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
 		if(escaped == NULL)
@@ -395,7 +407,6 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		char *escaped;
 		char cmd[16 + PATH_MAX];
-		const int cancellable = data == NULL;
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
 		if(escaped == NULL)
@@ -469,7 +480,7 @@ op_removesl(ops_t *ops, void *data, const char src[], const char dst[])
 	io_args_t args = {
 		.arg1.path = src,
 	};
-	return exec_io_op(ops, &ior_rm, &args, data == NULL);
+	return exec_io_op(ops, &ior_rm, &args, cancellable);
 }
 
 /* OP_COPY operation handler.  Copies file/directory without overwriting
@@ -502,6 +513,8 @@ static OpsResult
 op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		ConflictAction conflict_action)
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+	const int deep_copy = ((data_flags(data) & DF_DEEP_COPY) != 0);
 	const int fast_file_cloning = (ops == NULL)
 	                             ? cfg.fast_file_cloning
 	                             : ops->fast_file_cloning;
@@ -512,7 +525,6 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 #ifndef _WIN32
 		char *escaped_src, *escaped_dst;
 		char cmd[6 + PATH_MAX*2 + 1];
-		const int cancellable = (data == NULL);
 
 		escaped_src = shell_arg_escape(src, ops_shell_type(ops));
 		escaped_dst = shell_arg_escape(dst, ops_shell_type(ops));
@@ -524,9 +536,10 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		}
 
 		snprintf(cmd, sizeof(cmd),
-				"cp %s %s -R " PRESERVE_FLAGS " %s %s",
+				"cp %s %s %s -R " PRESERVE_FLAGS " %s %s",
 				(conflict_action == CA_FAIL) ? NO_CLOBBER : "",
 				fast_file_cloning ? REFLINK_AUTO : "",
+				deep_copy ? "-L" : "",
 				escaped_src, escaped_dst);
 		LOG_INFO_MSG("Running cp command: \"%s\"", cmd);
 		OpsResult result = run_operation_command(ops, cmd, cancellable);
@@ -556,8 +569,10 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 			free(escaped_src);
 			free(escaped_dst);
 
-			if(is_vista_and_above())
+			if(!deep_copy && is_vista_and_above())
+			{
 				strcat(cmd, "/B ");
+			}
 			if(conflict_action != CA_FAIL)
 			{
 				strcat(cmd, "/Y ");
@@ -585,9 +600,10 @@ op_cp(ops_t *ops, void *data, const char src[], const char dst[],
 		.arg4 = {
 			.fast_file_cloning = fast_file_cloning,
 			.data_sync = data_sync,
+			.deep_copying = deep_copy,
 		},
 	};
-	return exec_io_op(ops, &ior_cp, &args, data == NULL);
+	return exec_io_op(ops, &ior_cp, &args, cancellable);
 }
 
 /* OP_MOVE operation handler.  Moves file/directory without overwriting
@@ -620,6 +636,8 @@ static OpsResult
 op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 		ConflictAction conflict_action)
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+
 	OpsResult result;
 
 	if(!ops_uses_syscalls(ops))
@@ -628,7 +646,6 @@ op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 		struct stat st;
 		char *escaped_src, *escaped_dst;
 		char cmd[6 + PATH_MAX*2 + 1];
-		const int cancellable = data == NULL;
 
 		if(conflict_action == CA_FAIL && os_lstat(dst, &st) == 0 &&
 				!is_case_change(src, dst))
@@ -687,7 +704,7 @@ op_mv(ops_t *ops, void *data, const char src[], const char dst[],
 			},
 		};
 
-		result = exec_io_op(ops, &ior_mv, &args, data == NULL);
+		result = exec_io_op(ops, &ior_mv, &args, cancellable);
 	}
 
 	/* Accounting for background jobs might take some kind of a queue of events
@@ -831,6 +848,8 @@ op_subattr(ops_t *ops, void *data, const char src[], const char dst[])
 static OpsResult
 op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int cancellable = ((data_flags(data) & DF_NO_CANCEL) == 0);
+
 	if(!ops_uses_syscalls(ops))
 	{
 		char cmd[6 + PATH_MAX*2 + 1];
@@ -867,7 +886,7 @@ op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 #ifndef _WIN32
 		snprintf(cmd, sizeof(cmd), "ln -s %s %s", escaped_src, escaped_dst);
 		LOG_INFO_MSG("Running ln command: \"%s\"", cmd);
-		result = run_operation_command(ops, cmd, 1);
+		result = run_operation_command(ops, cmd, cancellable);
 #else
 		char exe_dir[PATH_MAX + 2];
 		if(get_exe_dir(exe_dir, ARRAY_LEN(exe_dir)) != 0)
@@ -901,12 +920,14 @@ op_symlink(ops_t *ops, void *data, const char src[], const char dst[])
 		.arg2.target = dst,
 		.arg3.crs = IO_CRS_REPLACE_FILES,
 	};
-	return exec_io_op(ops, &iop_ln, &args, 0);
+	return exec_io_op(ops, &iop_ln, &args, cancellable);
 }
 
 static OpsResult
 op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 {
+	const int make_parents = ((data_flags(data) & DF_MAKE_PARENTS) != 0);
+
 	if(!ops_uses_syscalls(ops))
 	{
 #ifndef _WIN32
@@ -914,13 +935,13 @@ op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 		char *escaped;
 
 		escaped = shell_arg_escape(src, ops_shell_type(ops));
-		snprintf(cmd, sizeof(cmd), "mkdir %s %s", (data == NULL) ? "" : "-p",
+		snprintf(cmd, sizeof(cmd), "mkdir %s %s", make_parents ? "-p" : "",
 				escaped);
 		free(escaped);
 		LOG_INFO_MSG("Running mkdir command: \"%s\"", cmd);
 		return run_operation_command(ops, cmd, 1);
 #else
-		if(data == NULL)
+		if(!make_parents)
 		{
 			wchar_t *const utf16_path = utf8_to_utf16(src);
 			BOOL success = CreateDirectoryW(utf16_path, NULL);
@@ -955,10 +976,18 @@ op_mkdir(ops_t *ops, void *data, const char src[], const char dst[])
 
 	io_args_t args = {
 		.arg1.path = src,
-		.arg2.process_parents = data != NULL,
+		.arg2.process_parents = make_parents,
 		.arg3.mode = 0755,
 	};
 	return exec_io_op(ops, &iop_mkdir, &args, 0);
+}
+
+/* Turns a pointer-to-void into data flags or asserts.  Returns the flags. */
+static DataFlags
+data_flags(void *data)
+{
+	assert((uintptr_t)data < DF_LIMIT_VALUE && "Got pointer instead of flags.");
+	return (DataFlags)(uintptr_t)data;
 }
 
 static OpsResult

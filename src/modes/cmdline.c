@@ -1272,7 +1272,7 @@ extedit_prompt(const char input[], int cursor_col, int is_expr_reg,
 		curr_stats.save_msg = 1;
 	}
 
-	/* Invoking this will NULL in case of error to report it. */
+	/* Invoking this with NULL in case of error to report it. */
 	finish_prompt_submode(ext_cmd, cb, cb_arg);
 	free(ext_cmd);
 }

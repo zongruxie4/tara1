@@ -4422,6 +4422,12 @@ parse_cpmv_flags(int *argc, char ***argv)
 {
 	int flags = 0;
 
+	if(argc == 0)
+	{
+		/* To avoid incrementing NULL *argv by zero at the bottom. */
+		return flags;
+	}
+
 	int i;
 	for(i = 0; i < *argc; ++i)
 	{

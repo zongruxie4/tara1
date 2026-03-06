@@ -93,6 +93,9 @@
 
 	Documented name conflict resolution dialog.  Patch by Kirill Rekhov.
 
+	Adjusted statusbar message according to the operation performed by p, P,
+	al and rl normal mode commands.  Thanks to CaptainFantastic and qadzek.
+
 	Fixed 'trashdir' with "%r" on BSD-like systems (those with getmntinfo()
 	instead of getmntent() API).  The regression was apparently introduced in
 	v0.9.1-beta.  Thanks to sublimal.

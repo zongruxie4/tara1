@@ -13,12 +13,14 @@
 #include "../../src/modes/cmdline.h"
 #include "../../src/modes/modes.h"
 #include "../../src/modes/wk.h"
+#include "../../src/ui/statusbar.h"
 #include "../../src/ui/ui.h"
 #include "../../src/utils/fs.h"
 #include "../../src/utils/str.h"
 #include "../../src/filelist.h"
 #include "../../src/flist_sel.h"
 #include "../../src/fops_common.h"
+#include "../../src/registers.h"
 #include "../../src/status.h"
 
 #include "utils.h"
@@ -242,6 +244,73 @@ TEST(lb_rb_S)
 	lwin.list_pos = 2;
 	(void)vle_keys_exec_timed_out(WK_RB WK_S);
 	assert_int_equal(0, lwin.list_pos);
+}
+
+TEST(selection_is_primary)
+{
+	regs_init();
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), TEST_DATA_PATH, "read",
+			cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	assert_int_equal(0, lwin.list_pos);
+	lwin.dir_entry[1].selected = 1;
+	lwin.selected_files = 1;
+
+	const reg_t *def_reg = regs_find(DEFAULT_REG_NAME);
+
+	cfg.selection_is_primary = 1;
+	(void)vle_keys_exec_timed_out(L"yy");
+	assert_int_equal(1, def_reg->nfiles);
+	assert_string_ends_with("/dos-eof", def_reg->files[0]);
+
+	cfg.selection_is_primary = 0;
+	(void)vle_keys_exec_timed_out(L"yy");
+	assert_int_equal(1, def_reg->nfiles);
+	assert_string_ends_with("/binary-data", def_reg->files[0]);
+
+	regs_reset();
+}
+
+TEST(yy_one_file)
+{
+	regs_init();
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), TEST_DATA_PATH, "read",
+			cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	const reg_t *def_reg = regs_find(DEFAULT_REG_NAME);
+
+	ui_sb_msg("");
+	(void)vle_keys_exec_timed_out(L"yy");
+	assert_string_equal("1 item yanked", ui_sb_last());
+	assert_int_equal(1, def_reg->nfiles);
+	assert_string_ends_with("/binary-data", def_reg->files[0]);
+
+	regs_reset();
+}
+
+TEST(yy_adjacent_files)
+{
+	regs_init();
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), TEST_DATA_PATH, "read",
+			cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	const reg_t *def_reg = regs_find(DEFAULT_REG_NAME);
+
+	ui_sb_msg("");
+	(void)vle_keys_exec_timed_out(L"3yy");
+	assert_int_equal(3, def_reg->nfiles);
+	assert_string_equal("3 items yanked", ui_sb_last());
+	assert_string_ends_with("/binary-data", def_reg->files[0]);
+	assert_string_ends_with("/dos-eof", def_reg->files[1]);
+	assert_string_ends_with("/dos-line-endings", def_reg->files[2]);
+
+	regs_reset();
 }
 
 TEST(gf, IF(not_windows))

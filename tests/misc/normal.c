@@ -16,6 +16,7 @@
 #include "../../src/ui/statusbar.h"
 #include "../../src/ui/ui.h"
 #include "../../src/utils/fs.h"
+#include "../../src/utils/path.h"
 #include "../../src/utils/str.h"
 #include "../../src/filelist.h"
 #include "../../src/flist_sel.h"
@@ -445,6 +446,45 @@ TEST(cl_multiple_files, IF(not_windows))
 
 	fops_init(NULL, NULL);
 	undo_teardown();
+}
+
+TEST(al_rl, IF(not_windows), REPEAT(2))
+{
+	const int al = (STIC_TEST_PARAM == 0);
+
+	regs_init();
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), TEST_DATA_PATH, "read",
+			cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+	(void)vle_keys_exec_timed_out(L"yy");
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), SANDBOX_PATH, "", cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	ui_sb_msg("");
+	(void)vle_keys_exec_timed_out(al ? L"al" : L"rl");
+	assert_success(chdir(cwd));
+
+	char target[PATH_MAX + 1];
+	assert_success(get_link_target(SANDBOX_PATH "/binary-data", target,
+				sizeof(target)));
+
+	assert_string_ends_with("/binary-data", target);
+	if(al)
+	{
+		assert_string_equal("1 item linked (abs)", ui_sb_last());
+		assert_true(is_path_absolute(target));
+	}
+	else
+	{
+		assert_string_equal("1 item linked (rel)", ui_sb_last());
+		assert_false(is_path_absolute(target));
+	}
+
+	remove_file(SANDBOX_PATH "/binary-data");
+
+	regs_reset();
 }
 
 /* vim: set tabstop=2 softtabstop=2 shiftwidth=2 noexpandtab cinoptions-=(0 : */

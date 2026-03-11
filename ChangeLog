@@ -98,6 +98,9 @@
 
 	Improved wording in documentation on gs and :copen.
 
+	Improved wording in a confirmation prompt for permanent deletion during
+	undo/redo.
+
 	Fixed 'trashdir' with "%r" on BSD-like systems (those with getmntinfo()
 	instead of getmntent() API).  The regression was apparently introduced in
 	v0.9.1-beta.  Thanks to sublimal.

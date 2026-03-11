@@ -349,9 +349,8 @@ op_remove(ops_t *ops, void *data, const char src[], const char dst[])
 		ops_confirm_func confirm = (ops != NULL ? ops->confirm : &prompt_msg);
 
 		char *msg = format_str("Are you sure?  "
-				"At least the following file is about to be deleted:\n \n%s\n \n"
-				"If you're undoing a command and want to see file names, use "
-				":undolist! command.",
+				"At least the following path is about to be deleted:\n \n%s\n \n"
+				"To see all paths on undoing an operation use :undolist! command.",
 				replace_home_part(src));
 		curr_stats.confirmed = confirm("Permanent deletion", msg);
 		free(msg);

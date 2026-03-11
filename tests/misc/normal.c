@@ -314,6 +314,48 @@ TEST(yy_adjacent_files)
 	regs_reset();
 }
 
+TEST(p_P, REPEAT(2))
+{
+	const int p = (STIC_TEST_PARAM == 0);
+
+	regs_init();
+	undo_setup();
+
+	create_dir(SANDBOX_PATH "/src");
+	create_file(SANDBOX_PATH "/src/file");
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), SANDBOX_PATH, "src", cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+	(void)vle_keys_exec_timed_out(L"yy");
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), SANDBOX_PATH, "", cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	ui_sb_msg("");
+	(void)vle_keys_exec_timed_out(p ? L"p" : L"P");
+	assert_success(chdir(cwd));
+
+	if(p)
+	{
+		assert_string_equal("1 item copied", ui_sb_last());
+
+		remove_file(SANDBOX_PATH "/src/file");
+		remove_file(SANDBOX_PATH "/file");
+	}
+	else
+	{
+		assert_string_equal("1 item moved", ui_sb_last());
+
+		no_remove_file(SANDBOX_PATH "/src/file");
+		remove_file(SANDBOX_PATH "/file");
+	}
+
+	remove_dir(SANDBOX_PATH "/src");
+
+	regs_reset();
+	undo_teardown();
+}
+
 TEST(gf, IF(not_windows))
 {
 	char dir_path[PATH_MAX + 1];

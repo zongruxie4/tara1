@@ -499,8 +499,18 @@ put_files_i(view_t *view, int start)
 
 	regs_pack(put_confirm.reg->name);
 	update_cursor_position(view);
-	ui_sb_msgf("%d item%s inserted%s", put_confirm.processed,
-			psuffix(put_confirm.processed), fops_get_cancellation_suffix());
+
+	const char *operation = "put";
+	switch(put_confirm.op)
+	{
+		case CMLO_COPY:     operation = "copied"; break;
+		case CMLO_MOVE:     operation = "moved"; break;
+		case CMLO_LINK_REL: operation = "linked (rel)"; break;
+		case CMLO_LINK_ABS: operation = "linked (abs)"; break;
+	}
+	ui_sb_msgf("%d item%s %s%s", put_confirm.processed,
+			psuffix(put_confirm.processed), operation,
+			fops_get_cancellation_suffix());
 
 	return 1;
 }

@@ -200,6 +200,9 @@
 	Fixed undoing of chmod operation not restoring owner's read permission.
 	Thanks to aleksejrs.  Patch by Kirill Rekhov.
 
+	Fixed incorrect progress indicator for dp and do keys in compare view.
+	Thanks to aleksejrs.
+
 0.14-beta to 0.14 (2025-02-08)
 
 	Improved documentation on zh/zl menu keys a bit.

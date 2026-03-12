@@ -203,6 +203,9 @@
 	Fixed incorrect progress indicator for dp and do keys in compare view.
 	Thanks to aleksejrs.
 
+	Fixed UID/GID occasionally not being formatted as requested (numeric vs.
+	symbolic form) in the UI.  Thanks to vuenn.
+
 0.14-beta to 0.14 (2025-02-08)
 
 	Improved documentation on zh/zl menu keys a bit.

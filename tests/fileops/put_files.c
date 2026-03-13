@@ -623,7 +623,30 @@ TEST(show_merge_all_option_if_paths_include_dir)
 	(void)unlink(SANDBOX_PATH "/b");
 }
 
-TEST(no_merge_options_on_putting_links)
+TEST(no_append_option_on_putting_file_links)
+{
+	create_file(SANDBOX_PATH "/dos-eof");
+
+	fops_init(&line_prompt, &options_prompt_abort_and_record);
+
+	char path[PATH_MAX + 1];
+	make_abs_path(path, sizeof(path), TEST_DATA_PATH, "/read/dos-eof", saved_cwd);
+	assert_success(regs_append('a', path));
+
+	response_options[0] = '\0';
+	(void)fops_put_links(&lwin, 'a', 0);
+	assert_string_doesnt_contain("a", response_options);
+	/* These are for directories, but won't hurt to check. */
+	assert_string_doesnt_contain("m", response_options);
+	assert_string_doesnt_contain("M", response_options);
+
+	restore_cwd(saved_cwd);
+	saved_cwd = save_cwd();
+
+	remove_file(SANDBOX_PATH "/dos-eof");
+}
+
+TEST(no_merge_options_on_putting_dir_links)
 {
 	char path[PATH_MAX + 1];
 
@@ -640,6 +663,8 @@ TEST(no_merge_options_on_putting_links)
 	(void)fops_put_links(&lwin, 'a', 0);
 	assert_string_doesnt_contain("m", response_options);
 	assert_string_doesnt_contain("M", response_options);
+	/* This is for files, but won't hurt to check. */
+	assert_string_doesnt_contain("a", response_options);
 
 	restore_cwd(saved_cwd);
 	saved_cwd = save_cwd();

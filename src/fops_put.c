@@ -602,7 +602,8 @@ put_next(int force)
 	}
 
 	from_trash = trash_has_path(filename);
-	move = from_trash || put_confirm.op == CMLO_MOVE;
+	move = put_confirm.op == CMLO_MOVE
+	    || (put_confirm.op == CMLO_COPY && from_trash);
 
 	copy_str(src_buf, sizeof(src_buf), filename);
 

@@ -109,6 +109,7 @@ TEST(moving_to_fake_entry_creates_the_other_file_and_entry_is_updated)
 	lwin.column_count = 1;
 	rwin.column_count = 1;
 	curr_stats.load_stage = 2;
+	curr_stats.number_of_windows = 2;
 
 	assert_true(process_scheduled_updates_of_view(&lwin));
 	assert_true(process_scheduled_updates_of_view(&rwin));

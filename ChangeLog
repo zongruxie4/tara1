@@ -213,6 +213,9 @@
 	link and simultaneously logging partial name in the undo history message,
 	which is merely informative.
 
+	Fixed :open not entering symbolic links to directories if there is no
+	"vifm" executable in $PATH.  Thanks to CaptainFantastic.
+
 0.14-beta to 0.14 (2025-02-08)
 
 	Improved documentation on zh/zl menu keys a bit.

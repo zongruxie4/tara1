@@ -107,6 +107,9 @@
 	Rewrote documentation about command-line ranges to make it complete and
 	more readable.  Thanks to CaptainFantastic.
 
+	Improved wording in documentation describing general behaviour of visual
+	mode.
+
 	Fixed 'trashdir' with "%r" on BSD-like systems (those with getmntinfo()
 	instead of getmntent() API).  The regression was apparently introduced in
 	v0.9.1-beta.  Thanks to sublimal.

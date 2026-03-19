@@ -104,6 +104,9 @@
 	Don't offer "append the tail" conflict resolution option for al and rl
 	operations because it's inappropriate for creation of symbolic links.
 
+	Rewrote documentation about command-line ranges to make it complete and
+	more readable.  Thanks to CaptainFantastic.
+
 	Fixed 'trashdir' with "%r" on BSD-like systems (those with getmntinfo()
 	instead of getmntent() API).  The regression was apparently introduced in
 	v0.9.1-beta.  Thanks to sublimal.

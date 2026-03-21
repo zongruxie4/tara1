@@ -285,12 +285,43 @@ TEST(zero_count_is_rejected)
 	const char *expected = "Count argument can't be zero";
 
 	ui_sb_msg("");
+	assert_failure(cmds_dispatch("delete 0", &lwin, CIT_COMMAND));
+	assert_string_equal(expected, ui_sb_last());
+
+	ui_sb_msg("");
 	assert_failure(cmds_dispatch("delete a 0", &lwin, CIT_COMMAND));
+	assert_string_equal(expected, ui_sb_last());
+
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch("yank 0", &lwin, CIT_COMMAND));
 	assert_string_equal(expected, ui_sb_last());
 
 	ui_sb_msg("");
 	assert_failure(cmds_dispatch("yank a 0", &lwin, CIT_COMMAND));
 	assert_string_equal(expected, ui_sb_last());
+}
+
+TEST(range_and_count_fails)
+{
+	/* The first parameter (register) is not a register. */
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch("delete ( 0", &lwin, CIT_COMMAND));
+	assert_string_equal("Trailing characters", ui_sb_last());
+
+	/* The only parameter (register) is not a register. */
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch("delete #", &lwin, CIT_COMMAND));
+	assert_string_equal("Trailing characters", ui_sb_last());
+
+	/* The second parameter (count) is not a number. */
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch("delete a e", &lwin, CIT_COMMAND));
+	assert_string_equal("Trailing characters", ui_sb_last());
+
+	/* The only parameter (count) is not a number. */
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch("delete a e", &lwin, CIT_COMMAND));
+	assert_string_equal("Trailing characters", ui_sb_last());
 }
 
 TEST(non_zero_count_is_handled)

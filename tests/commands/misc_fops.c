@@ -359,6 +359,32 @@ TEST(non_zero_count_is_handled)
 	regs_reset();
 }
 
+TEST(delete, REPEAT(2))
+{
+	const int in_bg = (STIC_TEST_PARAM == 1);
+
+	create_file(SANDBOX_PATH "/file");
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), SANDBOX_PATH, "", cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+	assert_string_equal("file", lwin.dir_entry[lwin.list_pos].name);
+
+	ui_sb_msg("");
+	if(in_bg)
+	{
+		assert_success(cmds_dispatch1("delete &", &lwin, CIT_COMMAND));
+		wait_for_bg();
+		assert_string_equal("", ui_sb_last());
+	}
+	else
+	{
+		assert_failure(cmds_dispatch1("delete", &lwin, CIT_COMMAND));
+		assert_string_equal("1 item Deleted", ui_sb_last());
+	}
+
+	no_remove_file(SANDBOX_PATH "/file");
+}
+
 static OpsResult
 exec_func(OPS op, void *data, const char *src, const char *dst)
 {

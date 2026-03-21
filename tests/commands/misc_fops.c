@@ -293,6 +293,41 @@ TEST(zero_count_is_rejected)
 	assert_string_equal(expected, ui_sb_last());
 }
 
+TEST(non_zero_count_is_handled)
+{
+	regs_init();
+
+	make_abs_path(lwin.curr_dir, sizeof(lwin.curr_dir), TEST_DATA_PATH,
+			"existing-files", cwd);
+	populate_dir_list(&lwin, /*reload=*/0);
+
+	const reg_t *reg = regs_find('a');
+
+	/* No range, register, count. */
+
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch1("yank a 2", &lwin, CIT_COMMAND));
+	assert_string_equal("2 items yanked", ui_sb_last());
+
+	reg = regs_find('a');
+	assert_int_equal(2, reg->nfiles);
+	assert_string_ends_with("/a", reg->files[0]);
+	assert_string_ends_with("/b", reg->files[1]);
+
+	/* Range, no register, count. */
+
+	ui_sb_msg("");
+	assert_failure(cmds_dispatch1("2yank 2", &lwin, CIT_COMMAND));
+	assert_string_equal("2 items yanked", ui_sb_last());
+
+	reg = regs_find(DEFAULT_REG_NAME);
+	assert_int_equal(2, reg->nfiles);
+	assert_string_ends_with("/b", reg->files[0]);
+	assert_string_ends_with("/c", reg->files[1]);
+
+	regs_reset();
+}
+
 static OpsResult
 exec_func(OPS op, void *data, const char *src, const char *dst)
 {

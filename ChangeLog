@@ -222,6 +222,9 @@
 	Fixed :open not entering symbolic links to directories if there is no
 	"vifm" executable in $PATH.  Thanks to CaptainFantastic.
 
+	Fixed :yank and :delete not handling optional count parameter correctly (a
+	regression since v0.11-beta).  Thanks to CaptainFantastic.
+
 0.14-beta to 0.14 (2025-02-08)
 
 	Improved documentation on zh/zl menu keys a bit.

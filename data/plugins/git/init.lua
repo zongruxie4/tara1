@@ -1,18 +1,3 @@
---[[
-
-Provides :Gclone command that clones repository by its URL determining directory
-name from URL and enters cloned directory on success.
-
-Usage example:
-
-    Clone into directory called "vifm".
-    :Gclone https://github.com/vifm/vifm.git
-
-    Clone into directory called "vifm-dev".
-    :Gclone https://github.com/vifm/vifm.git vifm-dev
-
---]]
-
 local M = {}
 
 local function clone(info)

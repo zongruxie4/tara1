@@ -93,6 +93,7 @@ SETUP()
 	stats.complete = &vle_cmds_complete;
 
 	curr_view = &lwin;
+	other_view = &rwin;
 
 	cmds_init();
 
@@ -123,6 +124,9 @@ TEARDOWN()
 	vle_opts_reset();
 
 	function_reset_all();
+
+	curr_view = NULL;
+	other_view = NULL;
 }
 
 TEST(test_set_completion)
@@ -646,13 +650,11 @@ TEST(command_options_are_completed)
 	ASSERT_COMPLETION(L"copy -", L"copy -deep");
 	ASSERT_NEXT_MATCH("-skip");
 
-	other_view = &rwin;
 #ifndef _WIN32
 	ASSERT_COMPLETION(L"copy -- -", L"copy -- ./-");
 #else
 	ASSERT_COMPLETION(L"copy -- -", L"copy -- -");
 #endif
-	other_view = NULL;
 }
 
 TEST(wingo_is_completed)

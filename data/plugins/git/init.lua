@@ -2,7 +2,7 @@ local statuses = vifm.plugin.require('statuses')
 
 local M = {}
 
-local function clone(info)
+local function clone_command(info)
     local url = info.argv[1]
 
     local name
@@ -59,7 +59,7 @@ end
 local added = vifm.cmds.add {
     name = "Gclone",
     description = "clone a repository and enter it",
-    handler = clone,
+    handler = clone_command,
     minargs = 1,
     maxargs = 2,
 }

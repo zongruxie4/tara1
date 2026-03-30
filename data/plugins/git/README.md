@@ -4,6 +4,8 @@ This plugin provides utilities related to Git.
 
 ### `:Gclone` command
 
+**Syntax:** `:Gclone URL [dir-name]`
+
 Clones repository, optionally deriving target directory name from the URL.  On
 success, enters the newly cloned worktree.  On failure, shows the error in a
 dialog.
@@ -27,6 +29,8 @@ dialog.
     `.git` suffix.
 
 ### `:Gmap` command
+
+**Syntax:** `:Gmap pattern replacement`
 
 Adds a simple replacement rule for Git statuses.  Each new rule is appended to
 the list.  The rules are processed in the order of their definition, therefore

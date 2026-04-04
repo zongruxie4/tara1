@@ -158,13 +158,21 @@ function M.get(at)
         end
     end
 
-    local status = exec(string.format('git -C %s status -z .', vifm.escape(at)))
-    for entry in string.gmatch(status, '[^\0]+') do
-        local status = entry:sub(1, 2)
-        local abs_path = root..'/'..entry:sub(4)
-        local rel_path = abs_path:sub(1 + #at + 1)
-        set_file_status(node, rel_path, status, expires)
-    end
+    vifm.startjob {
+        cmd = string.format('git -C %s status -z .', vifm.escape(at)),
+        onexit = function(job)
+            local status_all = job:stdout():read('a')
+            for entry in string.gmatch(status_all, '[^\0]+') do
+                local status = entry:sub(1, 2)
+                local abs_path = root..'/'..entry:sub(4)
+                local rel_path = abs_path:sub(1 + #at + 1)
+                set_file_status(node, rel_path, status, expires)
+            end
+            -- redraw
+            local view = vifm.currview()
+            view:cd(view.cwd)
+        end
+    }
 
     return node
 end

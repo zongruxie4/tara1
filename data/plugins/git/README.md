@@ -98,7 +98,6 @@ similar to how `git status --short` does it.
 
 **TODO:**
 
- * Run `git status -z` asynchronously to not block directory traversal.
  * Make cache update faster if directory modification is detected.
  * Check behaviour with submodules.
  * Check if `!!` status can ever be seen.

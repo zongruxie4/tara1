@@ -6,11 +6,12 @@ local GIT_DIR_TTL = 5
 local NON_GIT_DIR_TTL = 60
 
 local cache = {
-    in_git = false, -- whether current path is covered by Git
-    status = nil,   -- status derived from nested files
-    subs = { },     -- subdirectory name -> cache node
-    items = { },    -- file name -> status
-    expires = 0     -- when the cache entry expires
+    in_git = false,    -- whether current path is covered by Git
+    has_repos = false, -- whether current path is covered by Git
+    status = nil,      -- status derived from nested files
+    subs = { },        -- subdirectory name -> cache node
+    items = { },       -- file name         -> status
+    expires = 0        -- when the cache entry expires
 }
 
 local function find_node(path)
@@ -116,6 +117,11 @@ local function exec(cmd)
     return result, job:exitcode()
 end
 
+function redraw()
+    local view = vifm.currview()
+    view:cd(view.cwd)
+end
+
 function M.get(at)
     at = vifm.fnamemodify(at, ':p')
     if vifm.fnamemodify(at, ':t') == '.' then
@@ -135,6 +141,30 @@ function M.get(at)
         local node = make_node(cache, at)
         node.expires = ts + NON_GIT_DIR_TTL
         node.in_git = false
+
+        -- Check the status of git repository subdirectories
+        local cmd = string.format('find %s -mindepth 2 -maxdepth 2 -type d -name .git', vifm.escape(at))
+        vifm.startjob {
+            cmd = cmd,
+            onexit = function(job)
+                local status_all = job:stdout():read('a')
+                node.has_repos = status_all ~= ''
+                for entry in string.gmatch(status_all, '[^\n]+') do
+                    local sub_at = vifm.fnamemodify(entry, ':h')
+                    local sub_root = vifm.fnamemodify(entry, ':h:t')
+                    vifm.startjob {
+                        cmd = string.format('git -C %s status -z .', vifm.escape(sub_at)),
+                        onexit = function(sub_job)
+                            local sub_status_all = sub_job:stdout():read('a')
+                            local status = sub_status_all == '' and 'GG' or sub_status_all:sub(1, 2)
+                            set_file_status(node, sub_root, status, node.expires)
+                            redraw()
+                        end
+                    }
+                end
+            end
+        }
+
         return node
     end
 
@@ -168,9 +198,7 @@ function M.get(at)
                 local rel_path = abs_path:sub(1 + #at + 1)
                 set_file_status(node, rel_path, status, expires)
             end
-            -- redraw
-            local view = vifm.currview()
-            view:cd(view.cwd)
+            redraw()
         end
     }
 

@@ -118,8 +118,8 @@ local function exec(cmd)
 end
 
 function redraw()
-    local view = vifm.currview()
-    view:cd(view.cwd)
+    vifm.opts.global.laststatus = not vifm.opts.global.laststatus
+    vifm.opts.global.laststatus = not vifm.opts.global.laststatus
 end
 
 function M.get(at)

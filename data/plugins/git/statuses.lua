@@ -122,6 +122,44 @@ function redraw()
     vifm.opts.global.laststatus = not vifm.opts.global.laststatus
 end
 
+function update_subdir(sub_at, path, node)
+    vifm.startjob {
+        cmd = string.format('git -C %s status -z .', vifm.escape(sub_at)),
+        onexit = function(sub_job)
+            local sub_status_all = sub_job:stdout():read('a')
+            local status = sub_status_all == '' and 'GG' or sub_status_all:sub(1, 2)
+            set_file_status(node, path, status, node.expires)
+            redraw()
+        end
+    }
+end
+
+--- Check the status of git repository subdirectories
+function update_subdirs(at, node)
+    local cmd = string.format('find %s -mindepth 2 -maxdepth 2 -type d -name .git', vifm.escape(at))
+    vifm.startjob {
+        cmd = cmd,
+        onexit = function(job)
+            local status_all = job:stdout():read('a')
+            node.has_repos = status_all ~= ''
+            for entry in string.gmatch(status_all, '[^\n]+') do
+                local sub_at = vifm.fnamemodify(entry, ':h')
+                local sub_root = vifm.fnamemodify(entry, ':h:t')
+                update_subdir(sub_at, sub_root, node)
+            end
+        end
+    }
+end
+
+function is_dir(path)
+    local f = io.open(path .. "/")
+    if f then
+        f:close()
+        return true
+    end
+    return false
+end
+
 function M.get(at)
     at = vifm.fnamemodify(at, ':p')
     if vifm.fnamemodify(at, ':t') == '.' then
@@ -141,30 +179,7 @@ function M.get(at)
         local node = make_node(cache, at)
         node.expires = ts + NON_GIT_DIR_TTL
         node.in_git = false
-
-        -- Check the status of git repository subdirectories
-        local cmd = string.format('find %s -mindepth 2 -maxdepth 2 -type d -name .git', vifm.escape(at))
-        vifm.startjob {
-            cmd = cmd,
-            onexit = function(job)
-                local status_all = job:stdout():read('a')
-                node.has_repos = status_all ~= ''
-                for entry in string.gmatch(status_all, '[^\n]+') do
-                    local sub_at = vifm.fnamemodify(entry, ':h')
-                    local sub_root = vifm.fnamemodify(entry, ':h:t')
-                    vifm.startjob {
-                        cmd = string.format('git -C %s status -z .', vifm.escape(sub_at)),
-                        onexit = function(sub_job)
-                            local sub_status_all = sub_job:stdout():read('a')
-                            local status = sub_status_all == '' and 'GG' or sub_status_all:sub(1, 2)
-                            set_file_status(node, sub_root, status, node.expires)
-                            redraw()
-                        end
-                    }
-                end
-            end
-        }
-
+        update_subdirs(at, node)
         return node
     end
 
@@ -196,7 +211,12 @@ function M.get(at)
                 local status = entry:sub(1, 2)
                 local abs_path = root..'/'..entry:sub(4)
                 local rel_path = abs_path:sub(1 + #at + 1)
-                set_file_status(node, rel_path, status, expires)
+                if is_dir(abs_path..'/.git') then
+                    -- Strip the end of `rel_path`, to say the contents of the sub-repo isn't cached                                                                 │    │
+                    update_subdir(abs_path, rel_path:sub(1, -2), node)
+                else
+                    set_file_status(node, rel_path, status, expires)
+                end
             end
             redraw()
         end

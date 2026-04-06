@@ -99,7 +99,6 @@ similar to how `git status --short` does it.
 **TODO:**
 
  * Make cache update faster if directory modification is detected.
- * Check behaviour with submodules.
  * Check if `!!` status can ever be seen.
  * Consider using `git status --porcelain=v2 -z` as it provides more
    information.

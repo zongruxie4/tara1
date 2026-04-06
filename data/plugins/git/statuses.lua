@@ -222,6 +222,17 @@ function M.get(at)
         end
     }
 
+    vifm.startjob {
+        cmd = string.format('git -C %s ls-tree HEAD -r --name-only -z .', vifm.escape(at)),
+        onexit = function(job)
+            local status_all = job:stdout():read('a')
+            for rel_path in string.gmatch(status_all, '[^\0]+') do
+                set_file_status(node, rel_path, 'GG', expires)
+            end
+            redraw()
+        end
+    }
+
     return node
 end
 

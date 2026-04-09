@@ -160,6 +160,24 @@ function is_dir(path)
     return false
 end
 
+local function fill_node(info)
+    local node = info.node
+    node.pending = (node.pending or 0) + 1
+
+    vifm.startjob {
+        cmd = info.cmd,
+        onexit = function(job)
+            local output = job:stdout():read('a')
+            info.callback(output)
+
+            node.pending = node.pending - 1
+            if node.pending == 0 then
+                redraw()
+            end
+        end
+    }
+end
+
 function M.get(at)
     at = vifm.fnamemodify(at, ':p')
     if vifm.fnamemodify(at, ':t') == '.' then
@@ -203,10 +221,10 @@ function M.get(at)
         end
     end
 
-    vifm.startjob {
+    fill_node {
+        node = node,
         cmd = string.format('git -C %s status -z .', vifm.escape(at)),
-        onexit = function(job)
-            local status_all = job:stdout():read('a')
+        callback = function(status_all)
             for entry in string.gmatch(status_all, '[^\0]+') do
                 local status = entry:sub(1, 2)
                 local abs_path = root..'/'..entry:sub(4)
@@ -218,18 +236,16 @@ function M.get(at)
                     set_file_status(node, rel_path, status, expires)
                 end
             end
-            redraw()
         end
     }
 
-    vifm.startjob {
+    fill_node {
+        node = node,
         cmd = string.format('git -C %s ls-tree HEAD -r --name-only -z .', vifm.escape(at)),
-        onexit = function(job)
-            local status_all = job:stdout():read('a')
+        callback = function(status_all)
             for rel_path in string.gmatch(status_all, '[^\0]+') do
                 set_file_status(node, rel_path, 'GG', expires)
             end
-            redraw()
         end
     }
 

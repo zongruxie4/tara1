@@ -98,6 +98,8 @@ similar to how `git status --short` does it.
 
 **TODO:**
 
+ * Address obtaining GG entries failing for large repositories due to filling
+   of the pipe before `onexit` callback in invoked.
  * Reuse old cache for entire subtree while it's being updated (only a specific
    path gets to reuse it right now).
  * Make cache update faster if directory modification is detected.

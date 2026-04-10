@@ -26,10 +26,6 @@ local function find_node(path)
         current = next
     end
 
-    if os.time() > current.expires then
-        return nil
-    end
-
     return current
 end
 
@@ -160,6 +156,18 @@ function is_dir(path)
     return false
 end
 
+local function shallow(tbl)
+    if tbl == nil then
+        return nil
+    end
+
+    local copy = { }
+    for k, v in pairs(tbl) do
+        copy[k] = v
+    end
+    return copy
+end
+
 local function fill_node(info)
     local node = info.node
     node.pending = (node.pending or 0) + 1
@@ -172,6 +180,8 @@ local function fill_node(info)
 
             node.pending = node.pending - 1
             if node.pending == 0 then
+                -- Can drop the cache now.
+                node.past = nil
                 redraw()
             end
         end
@@ -186,7 +196,12 @@ function M.get(at)
 
     local cached = find_node(at)
     if cached ~= nil then
-        return cached
+        if cached.expires >= os.time() then
+            -- Return old cached data while new one is being retrieved to avoid
+            -- flickering.
+            -- XXX: this doesn't apply to nested paths.
+            return cached.past or cached
+        end
     end
 
     local ts = os.time()
@@ -200,6 +215,9 @@ function M.get(at)
         update_subdirs(at, node)
         return node
     end
+
+    -- Make a copy before invoking init_node() on the same node.
+    cached = shallow(cached)
 
     local expires = ts + GIT_DIR_TTL
     local node = init_node(make_node(cache, at), expires)
@@ -221,6 +239,7 @@ function M.get(at)
         end
     end
 
+    node.past = cached
     fill_node {
         node = node,
         cmd = string.format('git -C %s status -z .', vifm.escape(at)),
@@ -249,7 +268,7 @@ function M.get(at)
         end
     }
 
-    return node
+    return node.past or node
 end
 
 return M

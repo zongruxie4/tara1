@@ -98,6 +98,8 @@ similar to how `git status --short` does it.
 
 **TODO:**
 
+ * Reuse old cache for entire subtree while it's being updated (only a specific
+   path gets to reuse it right now).
  * Make cache update faster if directory modification is detected.
  * Check if `!!` status can ever be seen.
  * Consider using `git status --porcelain=v2 -z` as it provides more

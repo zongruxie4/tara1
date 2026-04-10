@@ -252,7 +252,8 @@ function M.get(at)
                 local abs_path = root..'/'..entry:sub(4)
                 local rel_path = abs_path:sub(1 + #at + 1)
                 if is_dir(abs_path..'/.git') then
-                    -- Strip the end of `rel_path`, to say the contents of the sub-repo isn't cached                                                                 │    │
+                    -- Strip the end of `rel_path`, to say the contents of the
+                    -- sub-repo isn't cached.
                     update_subdir(abs_path, rel_path:sub(1, -2), node)
                 else
                     set_file_status(node, rel_path, status, expires)

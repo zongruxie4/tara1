@@ -224,19 +224,22 @@ function M.get(at)
     node.in_git = true
 
     local subdirs = exec(string.format('git -C %s ls-tree -r -d --name-only -z HEAD .', vifm.escape(at)))
+    local subtree_has_changes = false
     for subdir in string.gmatch(subdirs, '[^\0]+') do
-        if subdir == '../' then
-            node.status = ''
-            -- no need to call `git status`
-            return node
-        end
+        if subdir ~= './' and subdir ~= '../' then
+            subtree_has_changes = true
 
-        if subdir ~= './' then
             local dir = make_node(node, subdir)
             dir.expires = expires
             dir.in_git = true
             dir.status = '  '
         end
+    end
+
+    if not subtree_has_changes then
+        node.status = ''
+        -- no need to call `git status`
+        return node
     end
 
     node.past = cached

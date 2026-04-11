@@ -132,13 +132,14 @@ end
 
 --- Check the status of git repository subdirectories
 function update_subdirs(at, node)
-    local cmd = string.format('find %s -mindepth 2 -maxdepth 2 -type d -name .git', vifm.escape(at))
+    local cmd = string.format('find %s -mindepth 2 -maxdepth 2 -type d -name .git -print0',
+                              vifm.escape(at))
     vifm.startjob {
         cmd = cmd,
         onexit = function(job)
             local status_all = job:stdout():read('a')
             node.has_repos = status_all ~= ''
-            for entry in string.gmatch(status_all, '[^\n]+') do
+            for entry in string.gmatch(status_all, '[^\0]+') do
                 local sub_at = vifm.fnamemodify(entry, ':h')
                 local sub_root = vifm.fnamemodify(entry, ':h:t')
                 update_subdir(sub_at, sub_root, node)

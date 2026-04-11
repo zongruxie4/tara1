@@ -48,6 +48,24 @@ local function map_command(info)
     map_rules[#map_rules + 1] = info.argv
 end
 
+local function opt_command(info)
+    local need_reset = false
+
+    for _, arg in ipairs(info.argv) do
+        if arg == 'unchanged' then
+            statuses.show_unchanged = true
+            need_reset = true
+        elseif arg == 'nounchanged' then
+            statuses.show_unchanged = false
+            need_reset = true
+        end
+    end
+
+    if need_reset then
+        statuses.reset()
+    end
+end
+
 local function char_matches(char, pattern)
     return pattern == '*' or char == pattern
 end
@@ -108,6 +126,14 @@ add_cmd {
     description = "map status to a custom value",
     handler = map_command,
     minargs = 2,
+}
+
+add_cmd {
+    name = "Gopt",
+    description = "customizes behaviour of the git plugin",
+    handler = opt_command,
+    minargs = 1,
+    maxargs = -1,
 }
 
 local added = vifm.addcolumntype {

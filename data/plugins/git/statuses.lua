@@ -1,18 +1,14 @@
-local M = { }
+local M = {
+    show_unchanged = true,
+}
 
 -- a user may be making changes in a repository quite frequently
 local GIT_DIR_TTL = 5
 -- repositories are created infrequently
 local NON_GIT_DIR_TTL = 60
 
-local cache = {
-    in_git = false,    -- whether current path is covered by Git
-    has_repos = false, -- whether current path is covered by Git
-    status = nil,      -- status derived from nested files
-    subs = { },        -- subdirectory name -> cache node
-    items = { },       -- file name         -> status
-    expires = 0        -- when the cache entry expires
-}
+-- root node of the cache, initialized by M.reset()
+local cache
 
 local function find_node(path)
     local current = cache
@@ -244,17 +240,34 @@ function M.get(at)
         end
     }
 
-    fill_node {
-        node = node,
-        cmd = string.format('git -C %s ls-tree HEAD -r --name-only -z .', vifm.escape(at)),
-        callback = function(status_all)
-            for rel_path in string.gmatch(status_all, '[^\0]+') do
-                set_file_status(node, rel_path, 'GG', expires)
+    if M.show_unchanged then
+        fill_node {
+            node = node,
+            cmd = string.format('git -C %s ls-tree HEAD -r --name-only -z .', vifm.escape(at)),
+            callback = function(status_all)
+                for rel_path in string.gmatch(status_all, '[^\0]+') do
+                    set_file_status(node, rel_path, 'GG', expires)
+                end
             end
-        end
-    }
+        }
+    end
 
     return node.past or node
 end
+
+function M.reset()
+    cache = {
+        in_git = false,    -- whether current path is covered by Git
+        has_repos = false, -- whether current path is covered by Git
+        status = nil,      -- status derived from nested files
+        subs = { },        -- subdirectory name -> cache node
+        items = { },       -- file name         -> status
+        expires = 0        -- when the cache entry expires
+    }
+
+    redraw()
+end
+
+M.reset()
 
 return M

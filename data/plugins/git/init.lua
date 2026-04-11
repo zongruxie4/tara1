@@ -70,7 +70,7 @@ local function status_column(info)
     local e = info.entry
 
     local node = statuses.get(e.location)
-    if not node.in_git then
+    if not node.in_git and not node.has_repos then
         return { text = '' }
     end
 

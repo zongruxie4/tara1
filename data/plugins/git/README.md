@@ -57,7 +57,7 @@ similar to how `git status --short` does it.
 
 | Value | Meaning
 | ----- | -------
-| `  `  | Ignored or unchanged.
+| `  `  | Ignored.
 | ` M`  | Modified in worktree.
 | `MM`  | Modified in index and in worktree.
 | `AM`  | Added in index, modified in worktree.
@@ -74,6 +74,7 @@ similar to how `git status --short` does it.
 | `DU`  | Deleted here, but updated in merged changes.
 | `AA`  | Added here and in merged changes.
 | `UU`  | Modified here and in merged changes.
+| `GG`  | Unchanged.
 | `??`  | Untracked.
 
 **Possible column values for directories:**
@@ -93,13 +94,16 @@ similar to how `git status --short` does it.
 
 **Issues:**
 
- * Has a noticeable initial delay for large Git repositories due to fetching
-   statuses synchronously.
+ * Large repositories won't show complete status due to hitting pipe size limit.
+ * Git status for a submodule isn't fetched immediately after entering it.
 
 **TODO:**
 
- * Address obtaining GG entries failing for large repositories due to filling
-   of the pipe before `onexit` callback in invoked.
+ * Could add `:Gopt` to make some behaviour optional:
+   - asynchronous/synchronous: as a workaround for large repositories
+   - marking unchanged file: also workaround but also a user's choice (e.g.,
+                             marking unchanged or ignored files)
+   - discovering git repositories and showing their statuses
  * Reuse old cache for entire subtree while it's being updated (only a specific
    path gets to reuse it right now).
  * Make cache update faster if directory modification is detected.

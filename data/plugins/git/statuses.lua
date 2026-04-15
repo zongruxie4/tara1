@@ -77,7 +77,7 @@ local function set_file_status(node, path, status, expires)
     if slash == nil then
         -- a file removed from index appears twice: first as  'D ' then as '??',
         -- keep the first status
-        if node.items[path] == nil then
+        if node.items[path] == nil or node.items[path] == 'GG' then
             node.items[path] = status
             update_dir_status(node, status)
         end

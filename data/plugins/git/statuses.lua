@@ -120,7 +120,7 @@ function update_subdir(sub_at, path, node)
         onexit = function(sub_job)
             local sub_status_all = sub_job:stdout():read('a')
             local status = sub_status_all == '' and 'GG' or sub_status_all:sub(1, 2)
-            set_file_status(node, path, status, node.expires)
+            node.items[path] = status
             redraw()
         end
     }

@@ -336,6 +336,9 @@ typedef struct config_t
 	 * sizes. */
 	int flexible_splitter;
 
+	/* persist selection across mode switches */
+	int keepsel;
+
 	/* Whether displaying status line is enabled. */
 	int display_statusline;
 

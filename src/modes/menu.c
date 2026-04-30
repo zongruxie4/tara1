@@ -331,7 +331,7 @@ key_handler(wchar_t key)
 	if(pass_combination_to_khandler(shortcut) && menu->len == 0)
 	{
 		show_error_msg("No more items in the menu", "Menu will be closed");
-		leave_menu_mode(1);
+		leave_menu_mode(!cfg.keepsel);
 	}
 
 	return 0;
@@ -369,7 +369,7 @@ modmenu_reenter(view_t *target_view)
 void
 modmenu_abort(void)
 {
-	leave_menu_mode(1);
+	leave_menu_mode(!cfg.keepsel);
 }
 
 void
@@ -425,7 +425,7 @@ can_scroll_menu_up(const menu_data_t *menu)
 static void
 cmd_ctrl_c(key_info_t key_info, keys_info_t *keys_info)
 {
-	leave_menu_mode(1);
+	leave_menu_mode(!cfg.keepsel);
 }
 
 static void
@@ -759,7 +759,7 @@ cmd_dd(key_info_t key_info, keys_info_t *keys_info)
 	if(pass_combination_to_khandler(L"dd") && menu->len == 0)
 	{
 		show_error_msg("Menu is closing", "No more items in the menu");
-		leave_menu_mode(1);
+		leave_menu_mode(!cfg.keepsel);
 	}
 }
 
@@ -790,7 +790,7 @@ pass_combination_to_khandler(const wchar_t keys[])
 			ui_refresh_win(menu_win);
 			return 1;
 		case KHR_CLOSE_MENU:
-			leave_menu_mode(1);
+			leave_menu_mode(!cfg.keepsel);
 			return 1;
 		case KHR_MORPHED_MENU:
 			assert(!vle_mode_is(MENU_MODE) && "Wrong use of KHR_MORPHED_MENU.");
@@ -1087,7 +1087,7 @@ nohlsearch_cmd(const cmd_info_t *cmd_info)
 static int
 quit_cmd(const cmd_info_t *cmd_info)
 {
-	leave_menu_mode(1);
+	leave_menu_mode(!cfg.keepsel);
 	return 0;
 }
 

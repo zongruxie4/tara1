@@ -150,6 +150,7 @@ static void iec_handler(OPT_OP op, optval_t val);
 static void ignorecase_handler(OPT_OP op, optval_t val);
 static void incsearch_handler(OPT_OP op, optval_t val);
 static void iooptions_handler(OPT_OP op, optval_t val);
+static void keepsel_handler(OPT_OP op, optval_t val);
 static void laststatus_handler(OPT_OP op, optval_t val);
 static void lines_handler(OPT_OP op, optval_t val);
 static void locateprg_handler(OPT_OP op, optval_t val);
@@ -725,6 +726,10 @@ options[] = {
 	  OPT_SET, ARRAY_LEN(iooptions_vals), iooptions_vals, &iooptions_handler,
 	  NULL,
 	  { .init = &init_iooptions },
+	},
+	{ "keepsel", "", "preserve selection when switching to normal mode",
+		OPT_BOOL, 0, NULL, &keepsel_handler, NULL,
+		{ .ref.bool_val = &cfg.keepsel }
 	},
 	{ "laststatus", "ls", "visibility of status bar",
 	  OPT_BOOL, 0, NULL, &laststatus_handler, NULL,
@@ -2407,6 +2412,12 @@ iooptions_handler(OPT_OP op, optval_t val)
 {
 	cfg.fast_file_cloning = ((val.set_items & 1) != 0);
 	cfg.data_sync = ((val.set_items & 2) != 0);
+}
+
+static void
+keepsel_handler(OPT_OP op, optval_t val)
+{
+	cfg.keepsel = val.bool_val;
 }
 
 static void

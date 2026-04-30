@@ -1081,7 +1081,10 @@ emark_cmd(const cmd_info_t *cmd_info)
 		const int use_term_mux = ma_flags_missing(flags, MF_NO_TERM_MUX);
 		const ShellPause pause = (cmd_info->emark ? PAUSE_ALWAYS : PAUSE_ON_ERROR);
 
-		flist_sel_stash(curr_view);
+		if(!cfg.keepsel)
+		{
+			flist_sel_stash(curr_view);
+		}
 
 		const char *cmd_to_run = com;
 		char *expanded_cmd = NULL;
@@ -5991,7 +5994,10 @@ usercmd_cmd(const cmd_info_t *cmd_info)
 		ext_cmd = skip_whitespace(ext_cmd);
 	}
 
-	flist_sel_stash(curr_view);
+	if (!cfg.keepsel)
+	{
+		flist_sel_stash(curr_view);
+	}
 
 	char *title = format_str(":%s%s%s", cmd_info->user_cmd,
 			(cmd_info->raw_args[0] == '\0' ? "" : " "), cmd_info->raw_args);

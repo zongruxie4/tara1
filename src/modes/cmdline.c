@@ -1719,7 +1719,7 @@ cmd_return(key_info_t key_info, keys_info_t *keys_info)
 	if(prev_mode == VISUAL_MODE && sub_mode != CLS_VFSEARCH &&
 			sub_mode != CLS_VBSEARCH)
 	{
-		modvis_leave(curr_stats.save_msg, !cfg.keepsel, !cfg.keepsel);
+		modvis_leave(curr_stats.save_msg, !cfg.keepsel, 0);
 	}
 
 	if(sub_mode == CLS_COMMAND || sub_mode == CLS_MENU_COMMAND)

@@ -511,7 +511,7 @@ cmds_exec(const char cmd[], view_t *view, int menu, int keep_sel)
 
 	if(cmd == NULL)
 	{
-		if(!keep_sel)
+		if(!cfg.keepsel)
 		{
 			flist_sel_stash_if_nonempty(view);
 		}
@@ -525,7 +525,7 @@ cmds_exec(const char cmd[], view_t *view, int menu, int keep_sel)
 
 	if(cmd[0] == '\0' && !menu)
 	{
-		if(!keep_sel)
+		if(!cfg.keepsel)
 		{
 			flist_sel_stash_if_nonempty(view);
 		}
@@ -558,7 +558,7 @@ cmds_exec(const char cmd[], view_t *view, int menu, int keep_sel)
 		un_group_close();
 	}
 
-	keep_view_selection = keep_sel;
+	keep_view_selection = (keep_sel || cfg.keepsel);
 	result = vle_cmds_run(cmd);
 
 	if(result >= 0)
@@ -626,7 +626,7 @@ cmds_exec(const char cmd[], view_t *view, int menu, int keep_sel)
 
 	if(!menu && vle_mode_is(NORMAL_MODE))
 	{
-		if(!keep_sel)
+		if(!cfg.keepsel)
 		{
 			flist_sel_stash_if_nonempty(view);
 		}
@@ -1194,7 +1194,7 @@ cmds_dispatch1(const char cmd[], view_t *view, CmdInputType type)
 
 		case CIT_MENU_COMMAND: menu = 1; /* Fall through. */
 		case CIT_COMMAND:
-			return cmds_exec(cmd, view, menu, /*keep_sel=*/cfg.keepsel);
+			return cmds_exec(cmd, view, menu, /*keep_sel=*/0);
 
 		case CIT_FILTER_PATTERN:
 			if(view->custom.type != CV_DIFF)
@@ -1238,8 +1238,7 @@ repeat_command(view_t *view, CmdInputType type)
 			return modview_find(NULL, backward);
 
 		case CIT_COMMAND:
-			return cmds_exec(/*cmd=*/NULL, view, /*menu=*/0,
-					/*keep_sel=*/cfg.keepsel);
+			return cmds_exec(/*cmd=*/NULL, view, /*menu=*/0, /*keep_sel=*/0);
 
 		case CIT_FILTER_PATTERN:
 			local_filter_apply(view, "");

@@ -5994,7 +5994,7 @@ usercmd_cmd(const cmd_info_t *cmd_info)
 		ext_cmd = skip_whitespace(ext_cmd);
 	}
 
-	if (!cfg.keep_sel)
+	if(!cfg.keep_sel)
 	{
 		flist_sel_stash(curr_view);
 	}

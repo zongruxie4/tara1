@@ -222,7 +222,7 @@ enter_attr_mode(view_t *active_view)
 	{
 		show_error_msg("Permissions change error",
 				"Selected files have no common access state");
-		leave_attr_mode(1);
+		leave_attr_mode(/*reset_selection=*/1);
 		return;
 	}
 
@@ -369,23 +369,9 @@ get_selection_size(int first_file_index)
 }
 
 static void
-leave_attr_mode(int reset_selection)
-{
-	vle_mode_set(NORMAL_MODE, VMT_PRIMARY);
-	ui_set_cursor(/*visibility=*/0);
-	curr_stats.use_input_bar = 1;
-
-	if(reset_selection)
-	{
-		flist_sel_stash(view);
-	}
-	ui_view_schedule_reload(view);
-}
-
-static void
 cmd_ctrl_c(key_info_t key_info, keys_info_t *keys_info)
 {
-	leave_attr_mode(!cfg.keep_sel);
+	leave_attr_mode(/*reset_selection=*/!cfg.keep_sel);
 }
 
 static void
@@ -401,7 +387,21 @@ cmd_return(key_info_t key_info, keys_info_t *keys_info)
 	get_current_full_path(view, sizeof(path), path);
 	set_perm_string(view, perms, origin_perms, adv_perms);
 
-	leave_attr_mode(1);
+	leave_attr_mode(/*reset_selection=*/1);
+}
+
+static void
+leave_attr_mode(int reset_selection)
+{
+	vle_mode_set(NORMAL_MODE, VMT_PRIMARY);
+	ui_set_cursor(/*visibility=*/0);
+	curr_stats.use_input_bar = 1;
+
+	if(reset_selection)
+	{
+		flist_sel_stash(view);
+	}
+	ui_view_schedule_reload(view);
 }
 
 TSTATIC void

@@ -729,7 +729,7 @@ options[] = {
 	},
 	{ "keepsel", "", "preserve selection when switching to normal mode",
 		OPT_BOOL, 0, NULL, &keepsel_handler, NULL,
-		{ .ref.bool_val = &cfg.keepsel }
+		{ .ref.bool_val = &cfg.keep_sel }
 	},
 	{ "laststatus", "ls", "visibility of status bar",
 	  OPT_BOOL, 0, NULL, &laststatus_handler, NULL,
@@ -2417,7 +2417,7 @@ iooptions_handler(OPT_OP op, optval_t val)
 static void
 keepsel_handler(OPT_OP op, optval_t val)
 {
-	cfg.keepsel = val.bool_val;
+	cfg.keep_sel = val.bool_val;
 }
 
 static void

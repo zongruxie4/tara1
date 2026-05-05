@@ -385,7 +385,7 @@ leave_attr_mode(int reset_selection)
 static void
 cmd_ctrl_c(key_info_t key_info, keys_info_t *keys_info)
 {
-	leave_attr_mode(!cfg.keepsel);
+	leave_attr_mode(!cfg.keep_sel);
 }
 
 static void

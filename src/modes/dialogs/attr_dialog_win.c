@@ -354,7 +354,7 @@ leave_attr_mode(int reset_selection)
 static void
 cmd_ctrl_c(key_info_t key_info, keys_info_t *keys_info)
 {
-	leave_attr_mode(/*reset_selection=*/!cfg.keepsel);
+	leave_attr_mode(/*reset_selection=*/!cfg.keep_sel);
 }
 
 /* leaves properties change dialog after changing file attributes */

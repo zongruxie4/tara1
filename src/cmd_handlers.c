@@ -1081,7 +1081,7 @@ emark_cmd(const cmd_info_t *cmd_info)
 		const int use_term_mux = ma_flags_missing(flags, MF_NO_TERM_MUX);
 		const ShellPause pause = (cmd_info->emark ? PAUSE_ALWAYS : PAUSE_ON_ERROR);
 
-		if(!cfg.keepsel)
+		if(!cfg.keep_sel)
 		{
 			flist_sel_stash(curr_view);
 		}
@@ -5994,7 +5994,7 @@ usercmd_cmd(const cmd_info_t *cmd_info)
 		ext_cmd = skip_whitespace(ext_cmd);
 	}
 
-	if (!cfg.keepsel)
+	if (!cfg.keep_sel)
 	{
 		flist_sel_stash(curr_view);
 	}

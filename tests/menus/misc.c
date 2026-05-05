@@ -87,6 +87,28 @@ TEST(menu_can_be_searched_interactively)
 	cfg.inc_search = 0;
 }
 
+TEST(keepsel_preserves_selection)
+{
+	conf_setup();
+	init_view_list(&lwin);
+
+	cfg.keep_sel = 0;
+	lwin.dir_entry[0].selected = 1;
+	lwin.selected_files = 1;
+	assert_success(cmds_dispatch("vifm", &lwin, CIT_COMMAND));
+	assert_success(cmds_dispatch("quit", &lwin, CIT_MENU_COMMAND));
+	assert_false(lwin.dir_entry[0].selected);
+
+	cfg.keep_sel = 1;
+	lwin.dir_entry[0].selected = 1;
+	lwin.selected_files = 1;
+	assert_success(cmds_dispatch("vifm", &lwin, CIT_COMMAND));
+	assert_success(cmds_dispatch("quit", &lwin, CIT_MENU_COMMAND));
+	assert_true(lwin.dir_entry[0].selected);
+
+	conf_teardown();
+}
+
 TEST(menu_is_built_from_a_command)
 {
 	undo_setup();

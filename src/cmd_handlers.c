@@ -3973,7 +3973,7 @@ static int
 nohlsearch_cmd(const cmd_info_t *cmd_info)
 {
 	reset_search_results(curr_view);
-	flist_sel_stash_if_nonempty(curr_view);
+	flist_sel_stash(curr_view);
 	return 0;
 }
 

@@ -8,6 +8,7 @@
 #include "../../src/compat/fs_limits.h"
 #include "../../src/compat/os.h"
 #include "../../src/cfg/config.h"
+#include "../../src/engine/cmds.h"
 #include "../../src/engine/keys.h"
 #include "../../src/modes/menu.h"
 #include "../../src/modes/modes.h"
@@ -39,6 +40,7 @@ TEARDOWN()
 {
 	vle_keys_reset();
 	conf_teardown();
+	vle_cmds_reset();
 
 	view_teardown(&lwin);
 	curr_view = NULL;

@@ -81,6 +81,7 @@ const char *tags[] = {
 	"vifm-'incsearch'",
 	"vifm-'iooptions'",
 	"vifm-'is'",
+	"vifm-'keepsel'",
 	"vifm-'laststatus'",
 	"vifm-'lines'",
 	"vifm-'locateprg'",
